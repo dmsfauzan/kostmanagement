@@ -1,0 +1,55 @@
+<?php
+
+namespace App\Providers;
+
+use App\Models\User;
+use App\Services\AuditService;
+use App\Services\SettingsService;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
+
+class AppServiceProvider extends ServiceProvider
+{
+    /**
+     * Register any application services.
+     */
+    public function register(): void
+    {
+        $this->app->singleton(SettingsService::class);
+        $this->app->singleton(AuditService::class);
+    }
+
+    /**
+     * Bootstrap any application services.
+     */
+    public function boot(): void
+    {
+        // Strict mode surfaces N+1 queries and silent mass-assignment
+        // mistakes during local development without affecting production.
+        Model::shouldBeStrict($this->app->environment('local'));
+
+        // Owners have full access to every ability in the application.
+        Gate::before(function (User $user, string $ability): ?bool {
+            return $user->hasRole('owner') ? true : null;
+        });
+
+        Password::defaults(function (): Password {
+            $rule = Password::min(8);
+
+            return $this->app->isProduction()
+                ? $rule->mixedCase()->numbers()->uncompromised()
+                : $rule;
+        });
+
+        RateLimiter::for('login', function (Request $request): Limit {
+            $key = (string) $request->input('email').'|'.$request->ip();
+
+            return Limit::perMinute(5)->by($key);
+        });
+    }
+}
