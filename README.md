@@ -84,6 +84,28 @@ composer dev
 # or individually: php artisan serve | npm run dev | php artisan queue:listen
 ```
 
+### Local development with Laragon
+
+This project lives in `C:\laragon\www\KostManagement`. Laragon's auto virtual hosts map Laravel folders to their
+`public/` directory, so the app should be accessed at:
+
+**http://kostmanagement.test** — with `APP_URL=http://kostmanagement.test` in `.env`.
+
+> **Never** access the app through a sub-path such as `http://localhost/KostManagement/public`.
+> Livewire loads its JavaScript from a root-relative URL (`/livewire/livewire.js`) which 404s under a
+> sub-path. Without that script, `<form wire:submit>` falls back to a native GET submit — credentials
+> leak into the URL (`.../login?email=...&password=...`) and login appears broken.
+
+If `kostmanagement.test` does not resolve:
+
+1. Laragon → **Stop All** → **Start All** (regenerates `etc/apache2/sites-enabled/auto.KostManagement.test.conf`
+   and appends `127.0.0.1  KostManagement.test  #laragon magic!` to the hosts file).
+2. Confirm `C:\Windows\System32\drivers\etc\hosts` contains that line (add it manually as admin if needed).
+3. Restart and open `http://kostmanagement.test`.
+
+Prefer the built-in server? Run `php artisan serve`, set `APP_URL=http://localhost:8000`, and open that
+address instead.
+
 ## Seed Data
 
 `DatabaseSeeder` fully wires:
@@ -104,7 +126,7 @@ composer dev
 
 ## Roles & Permissions
 
-Full catalogue (53 permissions across 18 modules):
+Full catalogue (66 permissions across 20 modules):
 
 ```
 dashboard.view,
