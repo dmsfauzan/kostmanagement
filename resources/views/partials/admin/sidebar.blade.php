@@ -9,6 +9,7 @@
             ['route' => 'admin.floors', 'label' => 'Lantai', 'icon' => 'squares-2x2', 'perm' => 'floor.view'],
             ['route' => 'admin.room-types', 'label' => 'Tipe Kamar', 'icon' => 'document-text', 'perm' => 'room_type.view'],
             ['route' => 'admin.rooms', 'label' => 'Kamar', 'icon' => 'key', 'perm' => 'room.view'],
+            ['route' => 'admin.amenities', 'label' => 'Fasilitas', 'icon' => 'squares-2x2', 'perm' => 'amenity.view'],
         ],
         'Penghuni' => [
             ['route' => 'admin.tenants', 'label' => 'Penghuni', 'icon' => 'user-group', 'perm' => 'tenant.view'],

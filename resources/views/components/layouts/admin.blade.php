@@ -34,6 +34,18 @@
         @include('partials.admin.topbar', ['title' => $title])
 
         <main class="px-4 py-6 sm:px-6 lg:px-8">
+            @if (session('status'))
+                <div class="mb-4">
+                    <x-ui.alert type="success" dismissible>{{ session('status') }}</x-ui.alert>
+                </div>
+            @endif
+
+            @if (session('error'))
+                <div class="mb-4">
+                    <x-ui.alert type="danger" dismissible>{{ session('error') }}</x-ui.alert>
+                </div>
+            @endif
+
             {{ $slot }}
         </main>
     </div>

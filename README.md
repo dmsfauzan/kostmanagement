@@ -25,8 +25,8 @@ Production-ready Kost Management System built on **Laravel 13** — Livewire, Bl
 |---|---|---|
 | **0 — Architecture** | System, DB, ERD, module map, route map, permission matrix, service & scheduler plan | ✅ Delivered |
 | **1 — Foundation** | Auth, User, roles/permissions, admin/tenant/public layouts, 12 reusable UI components, settings, audit, dashboards, seeders, test suite | ✅ **Ready — you are here** |
-| **2 — Property & Room Management** | properties, buildings, floors, room types, rooms, amenities, room map, public rooms site | 🔜 Next |
-| **3 — Tenant & Lease** | tenants, documents, invitation flow, leases, move-in/out, deposit settlement | Planned |
+| **2 — Property & Room Management** | properties, buildings, floors, room types, rooms, amenities, room map, public rooms site | ✅ **Ready — you are here** |
+| **3 — Tenant & Lease** | tenants, documents, invitation flow, leases, move-in/out, deposit settlement | 🔜 Next |
 | **4 — Billing** | invoices, invoice items, monthly generation + idempotency, proration, late fee | Planned |
 | **5 — Payment** | payment methods, proof upload/verification, invoice recalculation | Planned |
 | **6 — Maintenance** | tickets, status workflow, assignment, SLA | Planned |
@@ -124,6 +124,8 @@ address instead.
 
 `DevUserSeeder` does nothing outside `local`/`testing` environments. Set `KOST_DEV_PASSWORD` in `.env` to override the development password without hardcoding it.
 
+- **PropertySeeder** — local/testing-only. Creates **Kost Mawar** with 2 buildings, 3 floors, 3 room types (Standard/Deluxe/Premium), 11 amenities, and 30 rooms across all statuses (available/occupied/maintenance/reserved).
+
 ## Roles & Permissions
 
 Full catalogue (66 permissions across 20 modules):
@@ -172,12 +174,30 @@ Authorization is enforced at three layers: route middleware, spatie permissions,
 
 ```
 GET  /                               public.home
+GET  /rooms                          public rooms (available only)
+GET  /rooms/{slug}                   room detail (404 when not available)
+GET  /facilities /about /rules /faq /contact
 GET  /admin/dashboard                admin.dashboard   (auth + role:owner,admin,finance,technician)
+GET  /admin/properties | buildings | floors | room-types | amenities | rooms
+GET  /admin/rooms/map                visual room map
 GET  /tenant/dashboard               tenant.dashboard  (auth + role:tenant)
 GET  /dashboard                      → redirects to the correct dashboard for the authenticated role
 GET  /profile                        authenticated user profile
 ... plus the full Breeze/Livewire auth set (/login, /register, /forgot-password, /reset-password, /verify-email, /confirm-password)
 ```
+
+Every admin page is guarded by a `can:<module>.<action>` middleware, and mutating actions re-check the permission inside the component.
+
+## Property & Room Management (Phase 2)
+
+Data model: `properties → buildings → floors → rooms`, with `room_types`, `amenities` (+ `room_amenity` / `room_type_amenity` pivots) and `room_photos`.
+
+- **Admin CRUD** (Livewire, class-based) for properties, buildings, floors, room types, amenities, and rooms.
+- **Room list** offers a table **and** card view, plus search, status filter, and property/building filters.
+- **Room map** (`/admin/rooms/map`) groups rooms by building → floor with colour-coded status tiles and an occupancy summary.
+- **Public site** shows only `available` rooms on `/`, `/rooms`, and `/rooms/{slug}`.
+- Business rules enforced: unique room number per property, floor must belong to the chosen building, price ≥ 0, unique building code per property, unique floor level per building.
+- `RoomService` handles room writes (amenity sync, photo storage, audit logging) and `OccupancyService` computes per-status counts and occupancy rate.
 
 ## Key Decisions
 
