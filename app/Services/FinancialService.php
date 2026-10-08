@@ -10,11 +10,14 @@ use App\Models\Payment;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 class FinancialService
 {
+    private const VERSION_KEY = 'financial.cache.version';
+
     /**
-     * Financial summary for the given range (defaults: current month).
+     * Cached financial summary for the given range (defaults: current month).
      *
      * @return array{
      *     billed: int,
@@ -27,6 +30,40 @@ class FinancialService
      * }
      */
     public function summary(?int $propertyId = null, ?Carbon $from = null, ?Carbon $to = null): array
+    {
+        $from = $from ?? now()->copy()->firstOfMonth()->startOfDay();
+        $to = $to ?? now()->copy()->endOfMonth()->endOfDay();
+
+        $key = 'financial.'.self::version().'.'.($propertyId ?? 'all').'.'.$from->toDateString().'.'.$to->toDateString();
+
+        return Cache::remember($key, 60, fn (): array => $this->compute($propertyId, $from, $to));
+    }
+
+    /**
+     * Invalidate all cached financial summaries.
+     */
+    public function flush(): void
+    {
+        Cache::forever(self::VERSION_KEY, self::version() + 1);
+    }
+
+    private static function version(): int
+    {
+        return (int) Cache::rememberForever(self::VERSION_KEY, fn (): int => 1);
+    }
+
+    /**
+     * @return array{
+     *     billed: int,
+     *     collected: int,
+     *     outstanding: int,
+     *     overdue: int,
+     *     expenses: int,
+     *     net_cash_flow: int,
+     *     monthly: list<array{month: string, billed: int, collected: int, expenses: int}>
+     * }
+     */
+    private function compute(?int $propertyId, Carbon $from, Carbon $to): array
     {
         $from = $from ?? now()->copy()->firstOfMonth()->startOfDay();
         $to = $to ?? now()->copy()->endOfMonth()->endOfDay();

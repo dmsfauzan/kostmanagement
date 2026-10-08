@@ -4,11 +4,14 @@ namespace App\Services;
 
 use App\Enums\RoomStatus;
 use App\Models\Room;
+use Illuminate\Support\Facades\Cache;
 
 class OccupancyService
 {
+    private const VERSION_KEY = 'occupancy.cache.version';
+
     /**
-     * Occupancy summary for a property (or the whole portfolio when null).
+     * Cached occupancy summary for a property (or the whole portfolio when null).
      *
      * @return array{
      *     total: int,
@@ -22,6 +25,35 @@ class OccupancyService
      * }
      */
     public function summary(?int $propertyId = null): array
+    {
+        $key = 'occupancy.'.self::version().'.'.($propertyId ?? 'all');
+
+        return Cache::remember($key, 60, fn (): array => $this->compute($propertyId));
+    }
+
+    public function flush(): void
+    {
+        Cache::forever(self::VERSION_KEY, self::version() + 1);
+    }
+
+    private static function version(): int
+    {
+        return (int) Cache::rememberForever(self::VERSION_KEY, fn (): int => 1);
+    }
+
+    /**
+     * @return array{
+     *     total: int,
+     *     occupied: int,
+     *     available: int,
+     *     maintenance: int,
+     *     reserved: int,
+     *     inactive: int,
+     *     occupancy_rate: float,
+     *     by_status: array<string, int>
+     * }
+     */
+    private function compute(?int $propertyId): array
     {
         $counts = Room::query()
             ->when($propertyId, fn ($query) => $query->where('property_id', $propertyId))

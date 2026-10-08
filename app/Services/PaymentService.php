@@ -16,7 +16,10 @@ use InvalidArgumentException;
 
 class PaymentService
 {
-    public function __construct(private readonly AuditService $audit) {}
+    public function __construct(
+        private readonly AuditService $audit,
+        private readonly FinancialService $financial,
+    ) {}
 
     /**
      * Tenant submits a payment proof (stays pending until verified).
@@ -226,6 +229,8 @@ class PaymentService
             'status' => $status,
             'paid_at' => $paidAt,
         ]);
+
+        $this->financial->flush();
 
         return $invoice->refresh();
     }

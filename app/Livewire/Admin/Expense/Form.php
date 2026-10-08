@@ -6,6 +6,7 @@ use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Models\Property;
 use App\Services\AuditService;
+use App\Services\FinancialService;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -29,6 +30,22 @@ class Form extends Component
     public ?string $description = '';
 
     public $receipt;
+
+    public bool $isSearching = false;
+
+    public string $search = '';
+
+    public function updatedSearch(): void
+    {
+        $this->isSearching = trim($this->search) !== '';
+    }
+
+    public function setCategory(int $id): void
+    {
+        $this->expense_category_id = $id;
+        $this->isSearching = false;
+        $this->search = '';
+    }
 
     public function mount(?Expense $expense = null): void
     {
@@ -89,6 +106,8 @@ class Form extends Component
             $audit->record('expense.created', $expense, [], $expense->only(['amount', 'expense_date', 'vendor']), 'Expense');
             session()->flash('status', 'Pengeluaran ditambahkan.');
         }
+
+        app(FinancialService::class)->flush();
 
         $this->redirectRoute('admin.expenses', navigate: true);
     }

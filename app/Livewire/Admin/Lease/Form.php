@@ -41,6 +41,8 @@ class Form extends Component
 
     public ?string $notes = '';
 
+    public string $tenantSearch = '';
+
     public function mount(?Lease $lease = null): void
     {
         if ($lease && $lease->exists) {
@@ -145,7 +147,11 @@ class Form extends Component
     public function render()
     {
         return view('livewire.admin.lease.form', [
-            'tenants' => Tenant::query()->orderBy('full_name')->get(),
+            'tenants' => Tenant::query()
+                ->when($this->tenantSearch, fn ($q) => $q->where('full_name', 'like', "%{$this->tenantSearch}%"))
+                ->orderBy('full_name')
+                ->limit(50)
+                ->get(),
             'properties' => Property::query()->orderBy('name')->pluck('name', 'id'),
             'rooms' => $this->property_id
                 ? Room::query()->where('property_id', $this->property_id)->orderBy('number')->get()

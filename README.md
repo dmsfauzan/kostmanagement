@@ -267,6 +267,7 @@ Rute utama:
 - **Bukti & dokumen sensitif** disimpan di **private disk** dan hanya diunduh lewat endpoint ber-authorize berbasis **role staf / kepemilikan tenant** (tanpa mengandalkan permission tenant).
 - **Audit trail append-only** untuk setiap perubahan penting (lease, invoice, payment, deposit).
 - Validasi di frontend *dan* backend; error teknis tidak diekspos ke pengguna (`X-Request-ID` untuk tracing).
+- **Performance**: metrik dashboard di-cache singkat (60 detik) dengan invalidasi eksplisit saat data finansial berubah; dropdown berat (invoice → lease, lease → tenant) dilimit + bertipe pencarian.
 - Aturan integritas: kamar tidak boleh punya dua kontrak aktif yang tumpang tindih, tidak ada tagihan ganda per periode, `amount_paid` hanya dari pembayaran terverifikasi, tidak ada hard-delete data keuangan.
 
 ## Pengujian
@@ -320,7 +321,7 @@ HTTPS, dan backup database — detail lengkap menyusul di **Phase 10**.
 - [x] Phase 7 — Pengumuman & Notifikasi (pengumuman bertarget, reminder otomatis, inbox)
 - [x] Phase 8 — Expense & Reporting (pengeluaran, dashboard finansial, 9 laporan + ekspor CSV/XLSX/PDF, global search)
 - [ ] Phase 8 — Pengeluaran & Laporan (dashboard keuangan/hunian, ekspor CSV/XLSX/PDF)
-- [~] Phase 9 — Keamanan, Audit & Optimasi (9A headers/policies/error UX ✅ · 9B audit/performance)
+- [x] Phase 9 — Keamanan, Audit & Optimasi (headers, policies, error UX, rate limit, cache, IDOR fix)
 - [ ] Phase 10 — Pengujian & Kesiapan Produksi (backup, monitoring, deployment)
 
 ## Kontribusi & Lisensi

@@ -14,6 +14,7 @@ class LeaseService
     public function __construct(
         private readonly AuditService $audit,
         private readonly DepositService $deposits,
+        private readonly OccupancyService $occupancy,
     ) {}
 
     /**
@@ -86,6 +87,7 @@ class LeaseService
 
             $room->update(['status' => RoomStatus::Occupied]);
             $this->deposits->hold($lease);
+            $this->occupancy->flush();
             $this->writeHistory($lease, $from, LeaseStatus::Active, 'Kontrak diaktifkan');
 
             $this->audit->record('lease.activated', $lease, [
@@ -118,6 +120,7 @@ class LeaseService
 
             if ($room && $room->status === RoomStatus::Occupied) {
                 $room->update(['status' => RoomStatus::Available]);
+                $this->occupancy->flush();
             }
 
             $this->writeHistory($lease, $from, LeaseStatus::Terminated, $reason);

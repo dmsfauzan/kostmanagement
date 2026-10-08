@@ -10,7 +10,10 @@ use InvalidArgumentException;
 
 class RoomService
 {
-    public function __construct(private readonly AuditService $audit) {}
+    public function __construct(
+        private readonly AuditService $audit,
+        private readonly OccupancyService $occupancy,
+    ) {}
 
     /**
      * @param  array<string, mixed>  $data
@@ -36,6 +39,8 @@ class RoomService
         $this->audit->record('room.created', $room, [], $room->only([
             'number', 'price', 'deposit', 'status',
         ]), 'Room');
+
+        $this->occupancy->flush();
 
         return $room;
     }
@@ -71,6 +76,10 @@ class RoomService
             ], 'Room');
         }
 
+        if (($before['status'] ?? null) !== $room->status->value) {
+            $this->occupancy->flush();
+        }
+
         return $room;
     }
 
@@ -79,6 +88,7 @@ class RoomService
         $this->audit->record('room.deleted', $room, $room->only(['number', 'price', 'status']), [], 'Room');
 
         $room->delete();
+        $this->occupancy->flush();
     }
 
     /**

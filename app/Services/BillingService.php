@@ -19,6 +19,8 @@ class BillingService
         private readonly ProrationCalculator $proration,
         private readonly InvoiceNumberGenerator $numbers,
         private readonly SettingsService $settings,
+        private readonly FinancialService $financial,
+        private readonly OccupancyService $occupancy,
     ) {}
 
     /**
@@ -118,6 +120,8 @@ class BillingService
             'total_amount' => $total,
             'amount_due' => $amountDue,
         ]);
+
+        $this->financial->flush();
 
         return $invoice;
     }

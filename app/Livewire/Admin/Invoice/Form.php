@@ -19,6 +19,8 @@ class Form extends Component
 
     public ?string $notes = '';
 
+    public string $leaseSearch = '';
+
     /** @var list<array{type: string, description: string, quantity: int, unit_price: int}> */
     public array $items = [
         ['type' => 'rent', 'description' => 'Sewa', 'quantity' => 1, 'unit_price' => 1500000],
@@ -91,7 +93,15 @@ class Form extends Component
     public function render()
     {
         return view('livewire.admin.invoice.form', [
-            'leases' => Lease::query()->with('tenant')->with('room')->latest()->get(),
+            'leases' => Lease::query()
+                ->with(['tenant', 'room'])
+                ->when($this->leaseSearch, fn ($q) => $q->where(
+                    fn ($r) => $r->where('code', 'like', "%{$this->leaseSearch}%")
+                        ->orWhereHas('tenant', fn ($t) => $t->where('full_name', 'like', "%{$this->leaseSearch}%"))
+                ))
+                ->latest()
+                ->limit(50)
+                ->get(),
             'types' => InvoiceItemType::cases(),
         ])->layout('components.layouts.admin', ['title' => 'Tambah Tagihan']);
     }

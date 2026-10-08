@@ -6,6 +6,7 @@ use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Models\Property;
 use App\Services\AuditService;
+use App\Services\FinancialService;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Url;
@@ -62,6 +63,8 @@ class Index extends Component
         $expense = Expense::query()->findOrFail($id);
         app(AuditService::class)->record('expense.deleted', $expense, $expense->only(['amount', 'expense_date']), [], 'Expense');
         $expense->delete();
+
+        app(FinancialService::class)->flush();
 
         session()->flash('status', 'Pengeluaran dihapus.');
     }

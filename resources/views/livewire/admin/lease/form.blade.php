@@ -9,11 +9,26 @@
         <x-ui.card>
             <div class="grid gap-4 sm:grid-cols-2">
                 <x-ui.select name="property_id" label="Properti" wire:model.live="property_id" :required="true" :options="$properties" :placeholder="null" />
-                <x-ui.select name="tenant_id" label="Penghuni" wire:model="tenant_id" :required="true" placeholder="Pilih penghuni...">
-                    @foreach ($tenants as $tenant)
-                        <option value="{{ $tenant->id }}">{{ $tenant->full_name }} — {{ $tenant->phone }}</option>
-                    @endforeach
-                </x-ui.select>
+                <div class="space-y-1.5 sm:col-span-2" x-data="{ open: false }">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Penghuni <span class="text-danger-500">*</span></label>
+                    <div class="relative">
+                        <input type="text" wire:model.live.debounce.300ms="tenantSearch" @focus="open = true" placeholder="Ketik untuk mencari penghuni (maks 50 hasil)..." class="block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400">
+                        <div x-show="open" @click.outside="open = false" class="absolute z-10 mt-1 max-h-52 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800">
+                            @forelse ($tenants as $tenant)
+                                <button type="button" wire:click="$set('tenant_id', {{ $tenant->id }})" @click="open = false" class="block w-full px-3 py-2 text-left text-sm {{ $tenant_id == $tenant->id ? 'font-semibold text-primary-600' : 'text-gray-700 dark:text-gray-200' }} hover:bg-gray-50 dark:hover:bg-gray-700">
+                                    {{ $tenant->full_name }} <span class="text-xs text-gray-400">· {{ $tenant->phone }}</span>
+                                </button>
+                            @empty
+                                <p class="px-3 py-2 text-sm text-gray-400">Tidak ada penghuni.</p>
+                            @endforelse
+                        </div>
+                    </div>
+                    @php $pickedTenant = $tenants->firstWhere('id', $tenant_id); @endphp
+                    @if ($pickedTenant)
+                        <p class="text-xs text-gray-500">Terpilih: <span class="font-medium">{{ $pickedTenant->full_name }}</span></p>
+                    @endif
+                    @error('tenant_id')<p class="text-sm text-danger-600 dark:text-danger-400">{{ $message }}</p>@enderror
+                </div>
                 <x-ui.select name="room_id" label="Kamar" wire:model.live="room_id" :required="true" :options="$rooms->mapWithKeys(fn($r) => [$r->id => $r->number.' · '.\App\Support\Money::format($r->price)])" placeholder="Pilih kamar..." class="sm:col-span-2" />
                 <x-ui.input name="start_date" label="Tanggal Mulai" type="date" wire:model="start_date" :required="true" />
                 <x-ui.input name="end_date" label="Tanggal Berakhir" type="date" wire:model="end_date" :required="true" />
