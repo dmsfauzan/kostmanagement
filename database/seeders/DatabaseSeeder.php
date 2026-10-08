@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             RolePermissionSeeder::class,
             SettingsSeeder::class,
             PaymentMethodSeeder::class,
+            ExpenseCategorySeeder::class,
             DevUserSeeder::class,
             PropertySeeder::class,
             TenantSeeder::class,
@@ -22,6 +23,7 @@ class DatabaseSeeder extends Seeder
             PaymentSeeder::class,
             MaintenanceSeeder::class,
             AnnouncementSeeder::class,
+            ExpenseSeeder::class,
         ]);
     }
 }

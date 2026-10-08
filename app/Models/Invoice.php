@@ -86,6 +86,11 @@ class Invoice extends Model
         return $query->where('status', $status->value);
     }
 
+    public function scopeForProperty(Builder $query, ?int $propertyId): Builder
+    {
+        return $query->when($propertyId, fn (Builder $q) => $q->where('property_id', $propertyId));
+    }
+
     public function scopeUnpaid(Builder $query): Builder
     {
         return $query->whereIn('status', [

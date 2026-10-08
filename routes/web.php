@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\ExpenseReceiptController;
 use App\Http\Controllers\Admin\TenantDocumentController;
 use App\Http\Controllers\AnnouncementAttachmentController;
 use App\Http\Controllers\DashboardController;
@@ -18,6 +19,8 @@ use App\Livewire\Admin\Announcement\Form as AnnouncementForm;
 use App\Livewire\Admin\Announcement\Index as AnnouncementIndex;
 use App\Livewire\Admin\Building\Form as BuildingForm;
 use App\Livewire\Admin\Building\Index as BuildingIndex;
+use App\Livewire\Admin\Expense\Form as ExpenseForm;
+use App\Livewire\Admin\Expense\Index as ExpenseIndex;
 use App\Livewire\Admin\Floor\Form as FloorForm;
 use App\Livewire\Admin\Floor\Index as FloorIndex;
 use App\Livewire\Admin\Invoice\Form as InvoiceForm;
@@ -205,6 +208,16 @@ Route::middleware(['auth', 'active', 'role:owner,admin,finance,technician'])
             ->middleware('can:announcement.update')->name('announcements.edit');
         Route::get('announcements/{announcement}/attachment', AnnouncementAttachmentController::class)
             ->middleware('can:announcement.view')->name('announcements.attachment');
+
+        // Expenses
+        Route::get('expenses', ExpenseIndex::class)
+            ->middleware('can:expense.view')->name('expenses');
+        Route::get('expenses/create', ExpenseForm::class)
+            ->middleware('can:expense.create')->name('expenses.create');
+        Route::get('expenses/receipt/{expense}', [ExpenseReceiptController::class, 'download'])
+            ->middleware('can:expense.view')->name('expenses.receipt');
+        Route::get('expenses/{expense}/edit', ExpenseForm::class)
+            ->middleware('can:expense.update')->name('expenses.edit');
 
         // Tenants
         Route::get('tenants', TenantIndex::class)

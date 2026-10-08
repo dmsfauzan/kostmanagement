@@ -27,6 +27,7 @@ use App\Services\AnnouncementService;
 use App\Services\AuditService;
 use App\Services\BillingService;
 use App\Services\DepositService;
+use App\Services\FinancialService;
 use App\Services\LateFeeCalculator;
 use App\Services\LeaseService;
 use App\Services\MaintenanceService;
@@ -65,6 +66,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(MaintenanceService::class);
         $this->app->singleton(AnnouncementService::class);
         $this->app->singleton(ReminderService::class);
+        $this->app->singleton(FinancialService::class);
     }
 
     /**

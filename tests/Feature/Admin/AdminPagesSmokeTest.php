@@ -37,6 +37,7 @@ it('renders every admin listing page', function (string $route) {
     'admin.payments',
     'admin.payment-methods',
     'admin.announcements',
+    'admin.expenses',
 ]);
 
 it('renders every admin create form', function (string $route) {
@@ -51,6 +52,7 @@ it('renders every admin create form', function (string $route) {
     'admin.leases.create',
     'admin.invoices.create',
     'admin.announcements.create',
+    'admin.expenses.create',
 ]);
 
 it('renders the edit forms for existing records', function () {

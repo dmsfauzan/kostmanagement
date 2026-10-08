@@ -29,7 +29,8 @@ it('renders the admin dashboard with real user counts', function () {
         ->get(route('admin.dashboard'))
         ->assertOk()
         ->assertSee('Dashboard')
-        ->assertSee('Total Pengguna');
+        ->assertSee('Perlu Tindakan')
+        ->assertSee('Okupansi');
 });
 
 it('renders the tenant dashboard', function () {

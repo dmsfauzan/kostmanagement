@@ -119,6 +119,14 @@ flowchart LR
 | Notifikasi | Inbox tenant + admin dengan lonceng unread + "Tandai semua dibaca" |
 | Pengumuman Terjadwal | `announcements:publish-due` menerbitkan yang `publish_at`-nya telah tiba |
 
+### Phase 8A — Pengeluaran & Dashboard
+
+| Modul | Keterangan |
+|---|---|
+| Pengeluaran | `expenses` + `expense_categories` (seed default), struk private |
+| `FinancialService` | `billed` · `collected` · `outstanding` · `overdue` · `expenses` · `net_cash_flow` — **billed ≠ collected** |
+| Dashboard Admin | KPI keuangan + okupansi, **Attention Center**, tabel 6 bulan terakhir (tanpa chart lib) |
+
 ### Fitur publik
 
 - Katalog kamar tersedia dengan filter tipe + pencarian nomor, halaman detail kamar (foto, fasilitas, harga, aturan).
@@ -238,7 +246,7 @@ resources/views/{components/ui,layouts,livewire,public,tenant,partials}
 ```
 
 Rute utama:
-`/` · `/rooms` · `/admin/{properties,buildings,floors,room-types,amenities,rooms,tenants,leases,invoices,payments,payment-methods,maintenance,announcements}` ·
+`/` · `/rooms` · `/admin/{properties,buildings,floors,room-types,amenities,rooms,tenants,leases,invoices,payments,payment-methods,maintenance,announcements,expenses}` ·
 `/tenant/{dashboard,lease,invoices,payments,maintenance,announcements,notifications}`.
 
 ## Keamanan & Validitas
@@ -299,6 +307,7 @@ HTTPS, dan backup database — detail lengkap menyusul di **Phase 10**.
 - [x] Phase 5 — Pembayaran (bukti, verifikasi, refund, notifikasi)
 - [x] Phase 6 — Maintenance (tiket, prioritas, penugasan, SLA)
 - [x] Phase 7 — Pengumuman & Notifikasi (pengumuman bertarget, reminder otomatis, inbox)
+- [~] Phase 8 — Expense & Reporting (8A pengeluaran & dashboard finansial ✅ · 8B laporan & ekspor)
 - [ ] Phase 8 — Pengeluaran & Laporan (dashboard keuangan/hunian, ekspor CSV/XLSX/PDF)
 - [ ] Phase 9 — Keamanan, Audit & Optimasi (IDOR review, N+1, caching, private file)
 - [ ] Phase 10 — Pengujian & Kesiapan Produksi (backup, monitoring, deployment)
