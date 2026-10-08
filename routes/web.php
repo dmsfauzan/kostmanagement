@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\ExpenseReceiptController;
+use App\Http\Controllers\Admin\ReportExportController;
 use App\Http\Controllers\Admin\TenantDocumentController;
 use App\Http\Controllers\AnnouncementAttachmentController;
 use App\Http\Controllers\DashboardController;
@@ -38,6 +39,7 @@ use App\Livewire\Admin\Payment\Show as PaymentShow;
 use App\Livewire\Admin\PaymentMethod\Index as PaymentMethodIndex;
 use App\Livewire\Admin\Property\Form as PropertyForm;
 use App\Livewire\Admin\Property\Index as PropertyIndex;
+use App\Livewire\Admin\Report\Index as ReportIndex;
 use App\Livewire\Admin\Room\Form as RoomForm;
 use App\Livewire\Admin\Room\Index as RoomIndex;
 use App\Livewire\Admin\Room\Map as RoomMap;
@@ -218,6 +220,12 @@ Route::middleware(['auth', 'active', 'role:owner,admin,finance,technician'])
             ->middleware('can:expense.view')->name('expenses.receipt');
         Route::get('expenses/{expense}/edit', ExpenseForm::class)
             ->middleware('can:expense.update')->name('expenses.edit');
+
+        // Reports
+        Route::get('reports', ReportIndex::class)
+            ->middleware('can:report.view')->name('reports');
+        Route::get('reports/export', ReportExportController::class)
+            ->middleware('can:report.export')->name('reports.export');
 
         // Tenants
         Route::get('tenants', TenantIndex::class)

@@ -8,14 +8,15 @@
         <x-ui.icon name="menu" class="size-6" />
     </button>
 
-    <div class="min-w-0 flex-1">
+    <div class="hidden min-w-0 flex-1 lg:block">
         <p class="truncate text-sm font-semibold text-gray-900 dark:text-white">
             {{ $title ?? 'Dashboard' }}
         </p>
-        <p class="hidden text-xs text-gray-500 sm:block dark:text-gray-400">
-            {{ now()->translatedFormat('l, d F Y') }}
-        </p>
     </div>
+
+    @if (\Illuminate\Support\Facades\Route::has('admin.reports'))
+        <livewire:admin.global-search />
+    @endif
 
     <div class="flex items-center gap-2">
         @if (\Illuminate\Support\Facades\Route::has('admin.notifications'))

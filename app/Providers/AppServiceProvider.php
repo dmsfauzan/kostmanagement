@@ -27,7 +27,9 @@ use App\Services\AnnouncementService;
 use App\Services\AuditService;
 use App\Services\BillingService;
 use App\Services\DepositService;
+use App\Services\ExportService;
 use App\Services\FinancialService;
+use App\Services\GlobalSearchService;
 use App\Services\LateFeeCalculator;
 use App\Services\LeaseService;
 use App\Services\MaintenanceService;
@@ -35,6 +37,7 @@ use App\Services\OccupancyService;
 use App\Services\PaymentService;
 use App\Services\ProrationCalculator;
 use App\Services\ReminderService;
+use App\Services\ReportService;
 use App\Services\SettingsService;
 use App\Services\TenantService;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -67,6 +70,12 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(AnnouncementService::class);
         $this->app->singleton(ReminderService::class);
         $this->app->singleton(FinancialService::class);
+        $this->app->singleton(ExportService::class);
+        $this->app->singleton(ReportService::class);
+        $this->app->singleton(GlobalSearchService::class);
+        $this->app->singleton(ExportService::class);
+        $this->app->singleton(ReportService::class);
+        $this->app->singleton(GlobalSearchService::class);
     }
 
     /**

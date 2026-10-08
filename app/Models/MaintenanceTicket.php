@@ -93,6 +93,11 @@ class MaintenanceTicket extends Model
         return $query->where('assigned_to', $userId);
     }
 
+    public function scopeForProperty(Builder $query, ?int $propertyId): Builder
+    {
+        return $query->when($propertyId, fn (Builder $q) => $q->where('property_id', $propertyId));
+    }
+
     public function isOpen(): bool
     {
         return $this->status->isOpen();

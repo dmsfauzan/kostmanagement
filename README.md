@@ -127,6 +127,14 @@ flowchart LR
 | `FinancialService` | `billed` · `collected` · `outstanding` · `overdue` · `expenses` · `net_cash_flow` — **billed ≠ collected** |
 | Dashboard Admin | KPI keuangan + okupansi, **Attention Center**, tabel 6 bulan terakhir (tanpa chart lib) |
 
+### Phase 8B — Laporan, Ekspor & Pencarian
+
+| Modul | Keterangan |
+|---|---|
+| Laporan | Okupansi, Pendapatan, Pengeluaran, Belum Dibayar, Jatuh Tempo, Penghuni, Kontrak Berakhir, Maintenance, Pembayaran — read-only dengan filter |
+| Ekspor | `ReportExportController` → **CSV / XLSX / PDF** (`maatwebsite/excel`, `barryvdh/laravel-dompdf`, PDF layout kop) |
+| Pencarian Global | Topbar admin: penghuni, kamar, tagihan, pembayaran, maintenance, kontrak (hasil menampilkan tipe entitas) |
+
 ### Fitur publik
 
 - Katalog kamar tersedia dengan filter tipe + pencarian nomor, halaman detail kamar (foto, fasilitas, harga, aturan).
@@ -246,7 +254,7 @@ resources/views/{components/ui,layouts,livewire,public,tenant,partials}
 ```
 
 Rute utama:
-`/` · `/rooms` · `/admin/{properties,buildings,floors,room-types,amenities,rooms,tenants,leases,invoices,payments,payment-methods,maintenance,announcements,expenses}` ·
+`/` · `/rooms` · `/admin/{properties,buildings,floors,room-types,amenities,rooms,tenants,leases,invoices,payments,payment-methods,maintenance,announcements,expenses,reports}` ·
 `/tenant/{dashboard,lease,invoices,payments,maintenance,announcements,notifications}`.
 
 ## Keamanan & Validitas
@@ -307,7 +315,7 @@ HTTPS, dan backup database — detail lengkap menyusul di **Phase 10**.
 - [x] Phase 5 — Pembayaran (bukti, verifikasi, refund, notifikasi)
 - [x] Phase 6 — Maintenance (tiket, prioritas, penugasan, SLA)
 - [x] Phase 7 — Pengumuman & Notifikasi (pengumuman bertarget, reminder otomatis, inbox)
-- [~] Phase 8 — Expense & Reporting (8A pengeluaran & dashboard finansial ✅ · 8B laporan & ekspor)
+- [x] Phase 8 — Expense & Reporting (pengeluaran, dashboard finansial, 9 laporan + ekspor CSV/XLSX/PDF, global search)
 - [ ] Phase 8 — Pengeluaran & Laporan (dashboard keuangan/hunian, ekspor CSV/XLSX/PDF)
 - [ ] Phase 9 — Keamanan, Audit & Optimasi (IDOR review, N+1, caching, private file)
 - [ ] Phase 10 — Pengujian & Kesiapan Produksi (backup, monitoring, deployment)

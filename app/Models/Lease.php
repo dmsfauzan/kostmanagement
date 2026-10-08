@@ -87,6 +87,11 @@ class Lease extends Model
         return $query->where('status', $status->value);
     }
 
+    public function scopeForProperty(Builder $query, ?int $propertyId): Builder
+    {
+        return $query->when($propertyId, fn (Builder $q) => $q->where('property_id', $propertyId));
+    }
+
     public function scopeOverlapping(Builder $query, string $start, string $end): Builder
     {
         return $query->where('start_date', '<=', $end)
