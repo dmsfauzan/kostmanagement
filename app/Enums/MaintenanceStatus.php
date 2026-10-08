@@ -44,4 +44,25 @@ enum MaintenanceStatus: string implements HasLabel
     {
         return ! in_array($this, [self::Resolved, self::Closed, self::Rejected], true);
     }
+
+    /**
+     * @return list<MaintenanceStatus>
+     */
+    public function allowedTransitions(): array
+    {
+        return match ($this) {
+            self::Submitted => [self::Acknowledged, self::Rejected],
+            self::Acknowledged => [self::InProgress, self::Rejected],
+            self::InProgress => [self::WaitingVendor, self::Resolved],
+            self::WaitingVendor => [self::InProgress, self::Resolved],
+            self::Resolved => [self::Closed, self::InProgress],
+            self::Closed => [self::InProgress],
+            self::Rejected => [],
+        };
+    }
+
+    public function canTransitionTo(self $target): bool
+    {
+        return in_array($target, $this->allowedTransitions(), true);
+    }
 }

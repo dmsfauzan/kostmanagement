@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             TenantSeeder::class,
             BillingSeeder::class,
             PaymentSeeder::class,
+            MaintenanceSeeder::class,
         ]);
     }
 }

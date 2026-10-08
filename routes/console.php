@@ -1,6 +1,7 @@
 <?php
 
 use App\Console\Commands\ApplyLateFeesCommand;
+use App\Console\Commands\CheckMaintenanceSlaCommand;
 use App\Console\Commands\GenerateInvoicesCommand;
 use App\Console\Commands\MarkOverdueInvoicesCommand;
 use Illuminate\Foundation\Inspiring;
@@ -25,5 +26,11 @@ Schedule::command(MarkOverdueInvoicesCommand::class)
 
 Schedule::command(ApplyLateFeesCommand::class)
     ->dailyAt('01:00')
+    ->withoutOverlapping()
+    ->onOneServer();
+
+// Maintenance SLA breach check (hourly; notifies staff once per ticket).
+Schedule::command(CheckMaintenanceSlaCommand::class)
+    ->hourly()
     ->withoutOverlapping()
     ->onOneServer();

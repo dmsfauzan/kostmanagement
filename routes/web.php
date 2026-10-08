@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\TenantDocumentController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\MaintenanceAttachmentController;
 use App\Http\Controllers\PaymentProofController;
 use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\RoomController as PublicRoomController;
@@ -22,6 +23,8 @@ use App\Livewire\Admin\Lease\Form as LeaseForm;
 use App\Livewire\Admin\Lease\Index as LeaseIndex;
 use App\Livewire\Admin\Lease\MoveOut as LeaseMoveOut;
 use App\Livewire\Admin\Lease\Show as LeaseShow;
+use App\Livewire\Admin\Maintenance\Index as AdminMaintenanceIndex;
+use App\Livewire\Admin\Maintenance\Show as AdminMaintenanceShow;
 use App\Livewire\Admin\Payment\Index as PaymentIndex;
 use App\Livewire\Admin\Payment\Show as PaymentShow;
 use App\Livewire\Admin\PaymentMethod\Index as PaymentMethodIndex;
@@ -36,6 +39,9 @@ use App\Livewire\Admin\Tenant\Form as TenantForm;
 use App\Livewire\Admin\Tenant\Index as TenantIndex;
 use App\Livewire\Admin\Tenant\Show as TenantShow;
 use App\Livewire\Tenant\Auth\ActivateAccount;
+use App\Livewire\Tenant\Maintenance\Create as TenantMaintenanceCreate;
+use App\Livewire\Tenant\Maintenance\Index as TenantMaintenanceIndex;
+use App\Livewire\Tenant\Maintenance\Show as TenantMaintenanceShow;
 use App\Livewire\Tenant\Payment\Submit as TenantPaymentSubmit;
 /*
 |--------------------------------------------------------------------------
@@ -88,6 +94,11 @@ Route::middleware(['auth', 'active', 'role:tenant'])
             ->name('payments.cancel');
         Route::get('payments/{payment}/proof', PaymentProofController::class)
             ->middleware('can:payment.view')->name('payments.proof');
+        Route::get('maintenance', TenantMaintenanceIndex::class)->name('maintenance');
+        Route::get('maintenance/create', TenantMaintenanceCreate::class)->name('maintenance.create');
+        Route::get('maintenance/attachments/{attachment}', MaintenanceAttachmentController::class)
+            ->name('maintenance.attachment');
+        Route::get('maintenance/{ticket}', TenantMaintenanceShow::class)->name('maintenance.show');
         Route::get('notifications', function () {
             return view('tenant.notifications');
         })->name('notifications');
@@ -167,6 +178,14 @@ Route::middleware(['auth', 'active', 'role:owner,admin,finance,technician'])
             ->middleware('can:payment.view')->name('payments.show');
         Route::get('payment-methods', PaymentMethodIndex::class)
             ->middleware('can:payment.view')->name('payment-methods');
+
+        // Maintenance
+        Route::get('maintenance', AdminMaintenanceIndex::class)
+            ->middleware('can:maintenance.view')->name('maintenance');
+        Route::get('maintenance/{ticket}', AdminMaintenanceShow::class)
+            ->middleware('can:maintenance.view')->name('maintenance.show');
+        Route::get('maintenance/attachments/{attachment}', MaintenanceAttachmentController::class)
+            ->name('maintenance.attachment');
 
         // Tenants
         Route::get('tenants', TenantIndex::class)

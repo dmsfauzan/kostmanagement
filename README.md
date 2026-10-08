@@ -90,6 +90,16 @@ flowchart LR
 | Refund / Cancel | Refund membalik kalkulasi invoice + audit; cancel oleh admin atau tenant |
 | Notifikasi | `PaymentSubmitted` → admin, `PaymentVerified`/`PaymentRejected` → tenant |
 
+### Phase 6 — Maintenance
+
+| Modul | Keterangan |
+|---|---|
+| Keluhan | `maintenance_tickets` (`MNT-YYYY-XXXX`), foto (private disk) |
+| Kategori & Prioritas | `ac/electricity/water/wifi/cleaning/facility/security/other` · `low/medium/high/urgent` |
+| Alur Status | `submitted → acknowledged → in_progress → (waiting_vendor) → resolved → closed` + `rejected`, setiap perubahan tercatat di histori |
+| Penugasan | Assign teknisi, SLA `maintenance.sla_hours` (dari Settings) |
+| Diskusi & Lampiran | Komentar (internal / publik), lampiran foto, endpoint unduh ber-authorize |
+
 ### Fitur publik
 
 - Katalog kamar tersedia dengan filter tipe + pencarian nomor, halaman detail kamar (foto, fasilitas, harga, aturan).
@@ -245,7 +255,7 @@ php artisan storage:link # symlink file publik (foto kamar, logo)
 
 ```bash
 php artisan schedule:list
-# generate tagihan tgl 1; mark-overdue & apply-late-fees harian
+# generate tagihan tgl 1; mark-overdue & apply-late-fees harian; cek SLA maintenance per jam
 ```
 
 Di Windows/Laragon, jalankan scheduler tiap menit:
@@ -267,7 +277,7 @@ HTTPS, dan backup database — detail lengkap menyusul di **Phase 10**.
 - [x] Phase 3 — Penghuni & Kontrak (undangan, move-in/out, deposit)
 - [x] Phase 4 — Penagihan (kalkulasi, penagihan berulang, denda, scheduler)
 - [x] Phase 5 — Pembayaran (bukti, verifikasi, refund, notifikasi)
-- [ ] Phase 6 — Maintenance (tiket, prioritas, penugasan, SLA)
+- [x] Phase 6 — Maintenance (tiket, prioritas, penugasan, SLA)
 - [ ] Phase 7 — Pengumuman & Notifikasi (targeting, reminder otomatis)
 - [ ] Phase 8 — Pengeluaran & Laporan (dashboard keuangan/hunian, ekspor CSV/XLSX/PDF)
 - [ ] Phase 9 — Keamanan, Audit & Optimasi (IDOR review, N+1, caching, private file)

@@ -8,7 +8,7 @@
         </x-slot:actions>
     </x-ui.page-header>
 
-    <form wire:submit="save" class="space-y-6">
+    <form wire:submit="save" enctype="multipart/form-data" class="space-y-6">
         <x-ui.card>
             <div class="grid gap-4 sm:grid-cols-2">
                 <x-ui.input name="name" label="Nama Properti" wire:model="name" :required="true" class="sm:col-span-2" />
