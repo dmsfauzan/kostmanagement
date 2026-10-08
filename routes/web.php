@@ -3,11 +3,13 @@
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\TenantDocumentController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PaymentProofController;
 use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\RoomController as PublicRoomController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
 use App\Http\Controllers\Tenant\InvoiceController as TenantInvoiceController;
 use App\Http\Controllers\Tenant\LeaseController as TenantLeaseController;
+use App\Http\Controllers\Tenant\PaymentController as TenantPaymentController;
 use App\Livewire\Admin\Amenity\Index as AmenityIndex;
 use App\Livewire\Admin\Building\Form as BuildingForm;
 use App\Livewire\Admin\Building\Index as BuildingIndex;
@@ -20,6 +22,9 @@ use App\Livewire\Admin\Lease\Form as LeaseForm;
 use App\Livewire\Admin\Lease\Index as LeaseIndex;
 use App\Livewire\Admin\Lease\MoveOut as LeaseMoveOut;
 use App\Livewire\Admin\Lease\Show as LeaseShow;
+use App\Livewire\Admin\Payment\Index as PaymentIndex;
+use App\Livewire\Admin\Payment\Show as PaymentShow;
+use App\Livewire\Admin\PaymentMethod\Index as PaymentMethodIndex;
 use App\Livewire\Admin\Property\Form as PropertyForm;
 use App\Livewire\Admin\Property\Index as PropertyIndex;
 use App\Livewire\Admin\Room\Form as RoomForm;
@@ -31,6 +36,7 @@ use App\Livewire\Admin\Tenant\Form as TenantForm;
 use App\Livewire\Admin\Tenant\Index as TenantIndex;
 use App\Livewire\Admin\Tenant\Show as TenantShow;
 use App\Livewire\Tenant\Auth\ActivateAccount;
+use App\Livewire\Tenant\Payment\Submit as TenantPaymentSubmit;
 /*
 |--------------------------------------------------------------------------
 | Public
@@ -76,6 +82,10 @@ Route::middleware(['auth', 'active', 'role:tenant'])
         Route::get('lease', TenantLeaseController::class)->name('lease');
         Route::get('invoices', [TenantInvoiceController::class, 'index'])->name('invoices');
         Route::get('invoices/{invoice}', [TenantInvoiceController::class, 'show'])->name('invoices.show');
+        Route::get('payments', [TenantPaymentController::class, 'index'])->name('payments');
+        Route::get('payments/create', TenantPaymentSubmit::class)->name('payments.create');
+        Route::get('payments/{payment}/proof', PaymentProofController::class)
+            ->middleware('can:payment.view')->name('payments.proof');
         Route::get('notifications', function () {
             return view('tenant.notifications');
         })->name('notifications');
@@ -145,6 +155,16 @@ Route::middleware(['auth', 'active', 'role:owner,admin,finance,technician'])
             ->middleware('can:invoice.create')->name('invoices.create');
         Route::get('invoices/{invoice:invoice_number}', InvoiceShow::class)
             ->middleware('can:invoice.view')->name('invoices.show');
+
+        // Payments
+        Route::get('payments', PaymentIndex::class)
+            ->middleware('can:payment.view')->name('payments');
+        Route::get('payments/{payment}/proof', PaymentProofController::class)
+            ->middleware('can:payment.view')->name('payments.proof');
+        Route::get('payments/{payment}', PaymentShow::class)
+            ->middleware('can:payment.view')->name('payments.show');
+        Route::get('payment-methods', PaymentMethodIndex::class)
+            ->middleware('can:payment.view')->name('payment-methods');
 
         // Tenants
         Route::get('tenants', TenantIndex::class)

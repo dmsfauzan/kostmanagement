@@ -50,8 +50,8 @@
             @endif
         </div>
 
-        @if ($invoice->isPayable() && \Illuminate\Support\Facades\Route::has('tenant.payments'))
-            <x-ui.button :href="route('tenant.payments')" variant="secondary" class="mt-5 w-full">Bayar Tagihan</x-ui.button>
+        @if ($invoice->isPayable())
+            <x-ui.button :href="route('tenant.payments.create').'?invoice='.$invoice->id" class="mt-5 w-full">Bayar Tagihan</x-ui.button>
         @endif
     </div>
 </x-layouts.tenant>

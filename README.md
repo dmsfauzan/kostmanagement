@@ -28,8 +28,9 @@ Production-ready Kost Management System built on **Laravel 13** — Livewire, Bl
 | **2 — Property & Room Management** | properties, buildings, floors, room types, rooms, amenities, room map, public rooms site | ✅ **Ready — you are here** |
 | **3 — Tenant & Lease** | tenants, documents, invitation/activation, leases, move-in/out, deposit settlement | ✅ **Ready** |
 | **4A — Billing Foundation** | invoices, invoice items, calculation services, manual/admin CRUD, tenant portal, issue notifications | ✅ **Ready** |
-| **4B — Recurring Billing** | monthly generation + idempotency, overdue marking, late fees, scheduler | ✅ **Ready — you are here** |
-| **5 — Payment** | payment methods, proof upload/verification, invoice recalculation | 🔜 Next |
+| **4B — Recurring Billing** | monthly generation + idempotency, overdue marking, late fees, scheduler | ✅ **Ready** |
+| **5A — Payment Foundation** | payment methods, proof upload, verify/reject, invoice recalculation, refund/cancel | ✅ **Ready — you are here** |
+| **5B — Payment Polish** | additional payment UX refinements | 🔜 Next |
 | **5 — Payment** | payment methods, proof upload/verification, invoice recalculation | Planned |
 | **6 — Maintenance** | tickets, status workflow, assignment, SLA | Planned |
 | **7 — Announcement & Notification** | announcements, database+mail notifications, reminder scheduler | Planned |
@@ -129,6 +130,8 @@ address instead.
 - **PropertySeeder** — local/testing-only. Creates **Kost Mawar** with 2 buildings, 3 floors, 3 room types (Standard/Deluxe/Premium), 11 amenities, and 30 rooms across all statuses (available/occupied/maintenance/reserved).
 - **TenantSeeder** — local/testing-only. Links `tenant@kostmanagement.test` to a tenant profile and an **active lease** (room becomes occupied, deposit held), plus 2 extra sample tenants.
 - **BillingSeeder** — local/testing-only. Issues an invoice for the sample active lease so the tenant portal shows a real bill.
+- **PaymentMethodSeeder** — always seeded (reference data): 4 payment methods for every environment.
+- **PaymentSeeder** — local/testing-only. Creates a pending payment on the sample invoice to test the verification flow.
 
 ## Roles & Permissions
 
@@ -188,9 +191,12 @@ GET  /admin/tenants | tenants/create | tenants/{tenant} | tenants/{tenant}/edit
 GET  /admin/leases | leases/create | leases/{lease} | leases/{lease}/edit | leases/{lease}/move-out
 GET  /admin/tenant-documents/{document}/download   (authorized private file)
 GET  /admin/invoices | invoices/create | invoices/{invoice_number}
+GET  /admin/payments | payments/{payment} | payments/{payment}/proof
+GET  /admin/payment-methods
 GET  /tenant/activate/{user}         signed activation URL (from invite email)
 GET  /tenant/lease                   tenant lease + history
 GET  /tenant/invoices | invoices/{invoice}   tenant invoices (own only)
+GET  /tenant/payments | payments/create | payments/{payment}/proof
 GET  /tenant/notifications           tenant notification inbox
 GET  /tenant/dashboard               tenant.dashboard  (auth + role:tenant)
 GET  /dashboard                      → redirects to the correct dashboard for the authenticated role
@@ -240,6 +246,19 @@ Data model: `invoices → invoice_items`. Invoice columns `subtotal/discount/lat
 - **`billing:mark-overdue`**: flips unpaid invoices past `due_date` to `overdue`, records audit, dispatches `InvoiceOverdue` → `InvoiceOverdueNotification` (mail + database).
 - **`billing:apply-late-fees`**: deterministically recalculates the late-fee line item per invoice (recomputed, never accumulating) using `LateFeeCalculator`.
 - Scheduled in `routes/console.php`: generate on the 1st of the month, mark-overdue and apply-late-fees daily.
+
+## Payment (Phase 5A)
+
+Data model: `payment_methods` (reference data) and `payments` (proof on the **private disk**).
+
+- **Tenant submits** a payment (choose invoice/method, amount, proof) → stays `pending`; the **invoice is never changed** until verification.
+- **Admin verifies** → `PaymentService::recalculateInvoice()` derives `amount_paid` from verified payments, sets `amount_due`, and flips the invoice to `paid` / `partially_paid`. **Reject** leaves the invoice untouched; **refund** (verified payment) reverses the calculation; pending payments can be **cancelled**.
+- Proof is required for non-cash methods; **cash** is recorded directly by admin as already verified (`recordManual`).
+- Overpayment is allowed (amount due clamps to 0, the excess is visible as "overpaid").
+- Every financial change writes an `audit_logs` entry; no payment is ever hard-deleted.
+- **Admin UI**: payment list (filters + pending/verified totals), detail (view proof, verify/reject/refund), and payment-method management.
+- **Tenant portal**: `/tenant/payments` + `/tenant/payments/create` (bottom-nav **Bayar**); proof download is authorized per-tenant.
+- **Seeded demo**: 4 payment methods (always) + a pending payment on the sample invoice (local).
 
 ### Scheduler
 

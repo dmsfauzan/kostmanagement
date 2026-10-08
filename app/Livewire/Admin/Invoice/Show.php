@@ -92,7 +92,7 @@ class Show extends Component
 
     public function render()
     {
-        $invoice = $this->invoice->load(['tenant', 'lease.room', 'items']);
+        $invoice = $this->invoice->load(['tenant', 'lease.room', 'items', 'payments.method']);
 
         return view('livewire.admin.invoice.show', [
             'invoice' => $invoice,

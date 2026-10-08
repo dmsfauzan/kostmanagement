@@ -76,6 +76,11 @@ class Invoice extends Model
         return $this->hasMany(InvoiceItem::class)->orderBy('sort_order')->orderBy('id');
     }
 
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class)->latest();
+    }
+
     public function scopeOfStatus(Builder $query, InvoiceStatus $status): Builder
     {
         return $query->where('status', $status->value);

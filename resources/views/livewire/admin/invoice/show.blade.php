@@ -133,4 +133,27 @@
             @endunless
         @endcan
     </x-ui.card>
+
+    <x-ui.card padding="p-0">
+        <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4 dark:border-gray-700">
+            <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Pembayaran ({{ count($invoice->payments) }})</h3>
+        </div>
+        @if ($invoice->payments->isEmpty())
+            <p class="p-5 text-sm text-gray-500">Belum ada pembayaran untuk tagihan ini.</p>
+        @else
+            <x-ui.table :headings="['Tanggal', 'Jumlah', 'Metode', 'Status', '']">
+                @foreach ($invoice->payments as $payment)
+                    <tr>
+                        <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ $payment->paid_at->format('d/m/Y') }}</td>
+                        <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">{{ \App\Support\Money::format($payment->amount) }}</td>
+                        <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ $payment->method?->name ?? '—' }}</td>
+                        <td class="px-4 py-3"><x-ui.status-badge :status="$payment->status" /></td>
+                        <td class="px-4 py-3 text-right">
+                            <x-ui.button :href="route('admin.payments.show', $payment)" variant="secondary" size="sm" wire:navigate>Tinjau</x-ui.button>
+                        </td>
+                    </tr>
+                @endforeach
+            </x-ui.table>
+        @endif
+    </x-ui.card>
 </div>

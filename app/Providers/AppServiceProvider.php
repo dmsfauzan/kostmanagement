@@ -13,6 +13,7 @@ use App\Services\DepositService;
 use App\Services\LateFeeCalculator;
 use App\Services\LeaseService;
 use App\Services\OccupancyService;
+use App\Services\PaymentService;
 use App\Services\ProrationCalculator;
 use App\Services\SettingsService;
 use App\Services\TenantService;
@@ -41,6 +42,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(ProrationCalculator::class);
         $this->app->singleton(LateFeeCalculator::class);
         $this->app->singleton(BillingService::class);
+        $this->app->singleton(PaymentService::class);
     }
 
     /**

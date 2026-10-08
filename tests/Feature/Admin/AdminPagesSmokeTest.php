@@ -5,6 +5,7 @@ use App\Models\Building;
 use App\Models\Floor;
 use App\Models\Invoice;
 use App\Models\Lease;
+use App\Models\Payment;
 use App\Models\Property;
 use App\Models\Room;
 use App\Models\RoomType;
@@ -32,6 +33,8 @@ it('renders every admin listing page', function (string $route) {
     'admin.tenants',
     'admin.leases',
     'admin.invoices',
+    'admin.payments',
+    'admin.payment-methods',
 ]);
 
 it('renders every admin create form', function (string $route) {
@@ -82,6 +85,13 @@ it('renders the edit forms for existing records', function () {
         'lease_id' => $lease->id,
     ]);
     $this->get(route('admin.invoices.show', $invoice->invoice_number))->assertOk();
+
+    $payment = Payment::factory()->create([
+        'property_id' => $property->id,
+        'invoice_id' => $invoice->id,
+        'tenant_id' => $tenant->id,
+    ]);
+    $this->get(route('admin.payments.show', $payment))->assertOk();
 });
 
 it('creates an amenity through the inline form', function () {

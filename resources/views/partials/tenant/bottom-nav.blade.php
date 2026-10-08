@@ -3,7 +3,7 @@
         ['route' => 'tenant.dashboard', 'label' => 'Beranda', 'icon' => 'home'],
         ['route' => 'tenant.lease', 'label' => 'Kontrak', 'icon' => 'document-text'],
         ['route' => 'tenant.invoices', 'label' => 'Tagihan', 'icon' => 'banknotes'],
-        ['route' => 'tenant.notifications', 'label' => 'Pesan', 'icon' => 'bell'],
+        ['route' => 'tenant.payments', 'label' => 'Bayar', 'icon' => 'credit-card'],
         \Illuminate\Support\Facades\Route::has('profile') ? ['route' => 'profile', 'label' => 'Profil', 'icon' => 'user'] : null,
     ], fn ($item) => $item && \Illuminate\Support\Facades\Route::has($item['route'])));
 @endphp
