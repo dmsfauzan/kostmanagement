@@ -14,7 +14,7 @@
 
                 <x-ui.input name="paid_at" label="Tanggal Bayar" type="date" wire:model="paid_at" :required="true" />
 
-                <x-ui.select name="payment_method_id" label="Metode Pembayaran" wire:model="payment_method_id" :options="$methods->pluck('name', 'id')" placeholder="Pilih metode..." />
+                <x-ui.select name="payment_method_id" label="Metode Pembayaran" wire:model.live="payment_method_id" :options="$methods->pluck('name', 'id')" placeholder="Pilih metode..." />
 
                 @if ($methods->firstWhere('id', $payment_method_id))
                     <p class="rounded-lg bg-gray-50 p-3 text-xs text-gray-500 dark:bg-gray-700 dark:text-gray-300">

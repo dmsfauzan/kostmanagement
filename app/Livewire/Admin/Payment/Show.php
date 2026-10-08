@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Admin\Payment;
 
-use App\Enums\PaymentStatus;
 use App\Models\Payment;
 use App\Services\PaymentService;
 use Illuminate\Support\Facades\Gate;
@@ -52,17 +51,24 @@ class Show extends Component
     {
         Gate::authorize('payment.verify');
 
-        if ($this->payment->status !== PaymentStatus::Verified) {
-            session()->flash('error', 'Hanya pembayaran terverifikasi yang dapat dikembalikan.');
-
-            return;
+        try {
+            app(PaymentService::class)->refund($this->payment->refresh());
+            session()->flash('status', 'Pembayaran dikembalikan; tagihan diperbarui.');
+        } catch (\InvalidArgumentException $thrown) {
+            session()->flash('error', $thrown->getMessage());
         }
+    }
 
-        $this->payment->update(['status' => PaymentStatus::Refunded]);
+    public function cancel(): void
+    {
+        Gate::authorize('payment.verify');
 
-        app(PaymentService::class)->recalculateInvoice($this->payment->invoice);
-
-        session()->flash('status', 'Pembayaran dikembalikan; tagihan diperbarui.');
+        try {
+            app(PaymentService::class)->cancel($this->payment->refresh());
+            session()->flash('status', 'Pembayaran dibatalkan.');
+        } catch (\InvalidArgumentException $thrown) {
+            session()->flash('error', $thrown->getMessage());
+        }
     }
 
     public function render()

@@ -4,6 +4,9 @@ namespace App\Services;
 
 use App\Enums\InvoiceStatus;
 use App\Enums\PaymentStatus;
+use App\Events\PaymentRejected;
+use App\Events\PaymentSubmitted;
+use App\Events\PaymentVerified;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\PaymentMethod;
@@ -61,6 +64,8 @@ class PaymentService
             'invoice' => $invoice->invoice_number,
             'amount' => $amount,
         ], 'Payment');
+
+        event(new PaymentSubmitted($payment));
 
         return $payment->refresh();
     }
@@ -131,6 +136,8 @@ class PaymentService
             'amount' => $payment->amount,
         ], 'Payment');
 
+        event(new PaymentVerified($payment));
+
         return $payment->refresh();
     }
 
@@ -150,6 +157,27 @@ class PaymentService
         $this->audit->record('payment.rejected', $payment, ['status' => 'pending'], [
             'status' => 'rejected',
             'reason' => $reason,
+        ], 'Payment');
+
+        event(new PaymentRejected($payment));
+
+        return $payment->refresh();
+    }
+
+    public function refund(Payment $payment, string $notes = ''): Payment
+    {
+        if (! $payment->isVerified()) {
+            throw new InvalidArgumentException('Hanya pembayaran terverifikasi yang dapat dikembalikan.');
+        }
+
+        DB::transaction(function () use ($payment): void {
+            $payment->update(['status' => PaymentStatus::Refunded]);
+            $this->recalculateInvoice($payment->invoice);
+        });
+
+        $this->audit->record('payment.refunded', $payment, ['status' => 'verified'], [
+            'status' => 'refunded',
+            'notes' => $notes,
         ], 'Payment');
 
         return $payment->refresh();

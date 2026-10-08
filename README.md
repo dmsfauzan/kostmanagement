@@ -29,8 +29,9 @@ Production-ready Kost Management System built on **Laravel 13** — Livewire, Bl
 | **3 — Tenant & Lease** | tenants, documents, invitation/activation, leases, move-in/out, deposit settlement | ✅ **Ready** |
 | **4A — Billing Foundation** | invoices, invoice items, calculation services, manual/admin CRUD, tenant portal, issue notifications | ✅ **Ready** |
 | **4B — Recurring Billing** | monthly generation + idempotency, overdue marking, late fees, scheduler | ✅ **Ready** |
-| **5A — Payment Foundation** | payment methods, proof upload, verify/reject, invoice recalculation, refund/cancel | ✅ **Ready — you are here** |
-| **5B — Payment Polish** | additional payment UX refinements | 🔜 Next |
+| **5A — Payment Foundation** | payment methods, proof upload, verify/reject, invoice recalculation | ✅ **Ready** |
+| **5B — Payment Polish** | refund/cancel, payment notifications (submit/verify/reject) | ✅ **Ready — you are here** |
+| **6 — Maintenance** | tickets, status workflow, assignment, SLA | 🔜 Next |
 | **5 — Payment** | payment methods, proof upload/verification, invoice recalculation | Planned |
 | **6 — Maintenance** | tickets, status workflow, assignment, SLA | Planned |
 | **7 — Announcement & Notification** | announcements, database+mail notifications, reminder scheduler | Planned |
@@ -256,6 +257,7 @@ Data model: `payment_methods` (reference data) and `payments` (proof on the **pr
 - Proof is required for non-cash methods; **cash** is recorded directly by admin as already verified (`recordManual`).
 - Overpayment is allowed (amount due clamps to 0, the excess is visible as "overpaid").
 - Every financial change writes an `audit_logs` entry; no payment is ever hard-deleted.
+- **Notifications**: `PaymentSubmitted` → admins; `PaymentVerified` / `PaymentRejected` → tenant (mail + database). **Refund** reverses the invoice and writes an audit entry; pending payments can be **cancelled** by admin or by the tenant.
 - **Admin UI**: payment list (filters + pending/verified totals), detail (view proof, verify/reject/refund), and payment-method management.
 - **Tenant portal**: `/tenant/payments` + `/tenant/payments/create` (bottom-nav **Bayar**); proof download is authorized per-tenant.
 - **Seeded demo**: 4 payment methods (always) + a pending payment on the sample invoice (local).

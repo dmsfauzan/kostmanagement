@@ -63,6 +63,16 @@
                         </x-ui.confirm-dialog>
                     @endcan
                 @endif
+
+                @if ($payment->isPending())
+                    @can('payment.verify')
+                        <x-ui.confirm-dialog title="Batalkan pembayaran" message="Pembayaran akan dibatalkan." action="cancel">
+                            <x-slot:trigger>
+                                <button type="button" class="w-full rounded-lg bg-white px-4 py-2 text-sm font-semibold text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:ring-gray-600">Batalkan</button>
+                            </x-slot:trigger>
+                        </x-ui.confirm-dialog>
+                    @endcan
+                @endif
             </div>
         </x-ui.card>
     </div>

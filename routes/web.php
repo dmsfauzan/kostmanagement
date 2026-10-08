@@ -84,6 +84,8 @@ Route::middleware(['auth', 'active', 'role:tenant'])
         Route::get('invoices/{invoice}', [TenantInvoiceController::class, 'show'])->name('invoices.show');
         Route::get('payments', [TenantPaymentController::class, 'index'])->name('payments');
         Route::get('payments/create', TenantPaymentSubmit::class)->name('payments.create');
+        Route::post('payments/{payment}/cancel', [TenantPaymentController::class, 'cancel'])
+            ->name('payments.cancel');
         Route::get('payments/{payment}/proof', PaymentProofController::class)
             ->middleware('can:payment.view')->name('payments.proof');
         Route::get('notifications', function () {

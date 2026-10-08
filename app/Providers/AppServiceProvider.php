@@ -4,8 +4,14 @@ namespace App\Providers;
 
 use App\Events\InvoiceIssued;
 use App\Events\InvoiceOverdue;
+use App\Events\PaymentRejected;
+use App\Events\PaymentSubmitted;
+use App\Events\PaymentVerified;
+use App\Listeners\NotifyAdminsOfPaymentSubmitted;
 use App\Listeners\SendInvoiceIssuedNotification;
 use App\Listeners\SendInvoiceOverdueNotification;
+use App\Listeners\SendPaymentRejectedNotification;
+use App\Listeners\SendPaymentVerifiedNotification;
 use App\Models\User;
 use App\Services\AuditService;
 use App\Services\BillingService;
@@ -52,6 +58,9 @@ class AppServiceProvider extends ServiceProvider
     {
         Event::listen(InvoiceIssued::class, SendInvoiceIssuedNotification::class);
         Event::listen(InvoiceOverdue::class, SendInvoiceOverdueNotification::class);
+        Event::listen(PaymentSubmitted::class, NotifyAdminsOfPaymentSubmitted::class);
+        Event::listen(PaymentVerified::class, SendPaymentVerifiedNotification::class);
+        Event::listen(PaymentRejected::class, SendPaymentRejectedNotification::class);
 
         // Strict mode surfaces N+1 queries and silent mass-assignment
         // mistakes during local development without affecting production.
