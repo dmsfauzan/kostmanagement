@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Events\AnnouncementPublished;
 use App\Events\InvoiceIssued;
 use App\Events\InvoiceOverdue;
 use App\Events\MaintenanceAssigned;
@@ -14,6 +15,7 @@ use App\Events\PaymentVerified;
 use App\Listeners\NotifyAdminsOfPaymentSubmitted;
 use App\Listeners\NotifyStaffOfMaintenanceCreated;
 use App\Listeners\NotifyStaffOfMaintenanceSla;
+use App\Listeners\SendAnnouncementPublishedNotification;
 use App\Listeners\SendInvoiceIssuedNotification;
 use App\Listeners\SendInvoiceOverdueNotification;
 use App\Listeners\SendMaintenanceAssignedNotification;
@@ -21,6 +23,7 @@ use App\Listeners\SendMaintenanceStatusNotification;
 use App\Listeners\SendPaymentRejectedNotification;
 use App\Listeners\SendPaymentVerifiedNotification;
 use App\Models\User;
+use App\Services\AnnouncementService;
 use App\Services\AuditService;
 use App\Services\BillingService;
 use App\Services\DepositService;
@@ -59,6 +62,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(BillingService::class);
         $this->app->singleton(PaymentService::class);
         $this->app->singleton(MaintenanceService::class);
+        $this->app->singleton(AnnouncementService::class);
     }
 
     /**
@@ -75,6 +79,7 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(MaintenanceAssigned::class, SendMaintenanceAssignedNotification::class);
         Event::listen(MaintenanceStatusChanged::class, SendMaintenanceStatusNotification::class);
         Event::listen(MaintenanceSlaBreached::class, NotifyStaffOfMaintenanceSla::class);
+        Event::listen(AnnouncementPublished::class, SendAnnouncementPublishedNotification::class);
 
         // Strict mode surfaces N+1 queries and silent mass-assignment
         // mistakes during local development without affecting production.

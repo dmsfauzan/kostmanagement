@@ -2,16 +2,20 @@
 
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\TenantDocumentController;
+use App\Http\Controllers\AnnouncementAttachmentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MaintenanceAttachmentController;
 use App\Http\Controllers\PaymentProofController;
 use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\RoomController as PublicRoomController;
+use App\Http\Controllers\Tenant\AnnouncementController as TenantAnnouncementController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
 use App\Http\Controllers\Tenant\InvoiceController as TenantInvoiceController;
 use App\Http\Controllers\Tenant\LeaseController as TenantLeaseController;
 use App\Http\Controllers\Tenant\PaymentController as TenantPaymentController;
 use App\Livewire\Admin\Amenity\Index as AmenityIndex;
+use App\Livewire\Admin\Announcement\Form as AnnouncementForm;
+use App\Livewire\Admin\Announcement\Index as AnnouncementIndex;
 use App\Livewire\Admin\Building\Form as BuildingForm;
 use App\Livewire\Admin\Building\Index as BuildingIndex;
 use App\Livewire\Admin\Floor\Form as FloorForm;
@@ -99,6 +103,10 @@ Route::middleware(['auth', 'active', 'role:tenant'])
         Route::get('maintenance/attachments/{attachment}', MaintenanceAttachmentController::class)
             ->name('maintenance.attachment');
         Route::get('maintenance/{ticket}', TenantMaintenanceShow::class)->name('maintenance.show');
+        Route::get('announcements', [TenantAnnouncementController::class, 'index'])->name('announcements');
+        Route::get('announcements/{announcement}', [TenantAnnouncementController::class, 'show'])->name('announcements.show');
+        Route::get('announcements/{announcement}/attachment', AnnouncementAttachmentController::class)
+            ->name('announcements.attachment');
         Route::get('notifications', function () {
             return view('tenant.notifications');
         })->name('notifications');
@@ -186,6 +194,16 @@ Route::middleware(['auth', 'active', 'role:owner,admin,finance,technician'])
             ->middleware('can:maintenance.view')->name('maintenance.show');
         Route::get('maintenance/attachments/{attachment}', MaintenanceAttachmentController::class)
             ->name('maintenance.attachment');
+
+        // Announcements
+        Route::get('announcements', AnnouncementIndex::class)
+            ->middleware('can:announcement.view')->name('announcements');
+        Route::get('announcements/create', AnnouncementForm::class)
+            ->middleware('can:announcement.create')->name('announcements.create');
+        Route::get('announcements/{announcement}/edit', AnnouncementForm::class)
+            ->middleware('can:announcement.update')->name('announcements.edit');
+        Route::get('announcements/{announcement}/attachment', AnnouncementAttachmentController::class)
+            ->middleware('can:announcement.view')->name('announcements.attachment');
 
         // Tenants
         Route::get('tenants', TenantIndex::class)

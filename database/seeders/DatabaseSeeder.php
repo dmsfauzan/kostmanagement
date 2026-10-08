@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             BillingSeeder::class,
             PaymentSeeder::class,
             MaintenanceSeeder::class,
+            AnnouncementSeeder::class,
         ]);
     }
 }

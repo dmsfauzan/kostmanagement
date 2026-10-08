@@ -100,6 +100,15 @@ flowchart LR
 | Penugasan | Assign teknisi, SLA `maintenance.sla_hours` (dari Settings) |
 | Diskusi & Lampiran | Komentar (internal / publik), lampiran foto, endpoint unduh ber-authorize |
 
+### Phase 7A — Pengumuman
+
+| Modul | Keterangan |
+|---|---|
+| Pengumuman | `announcements` (draft/published/archived), lampiran private |
+| Targeting | Semua penghuni / properti / gedung / lantai / kamar / penghuni tertentu |
+| Penerima | Dimaterialisasi saat publish → notifikasi (mail + database) |
+| Portal Tenant | Daftar relevan + detail (mark as read), kartu pengumuman di dashboard |
+
 ### Fitur publik
 
 - Katalog kamar tersedia dengan filter tipe + pencarian nomor, halaman detail kamar (foto, fasilitas, harga, aturan).
@@ -185,7 +194,7 @@ Buka `http://127.0.0.1:8000` dan masuk dengan akun demo di bawah.
 
 Seeder membuat **Kost Mawar** (2 gedung, 3 lantai, 3 tipe, 11 fasilitas, 30 kamar), penghuni
 `tenant@kostmanagement.test` dengan **kontrak aktif** (kamar `occupied`, deposit `held`), invoice
-terbit, dan satu pembayaran menunggu verifikasi.
+terbit, satu pembayaran menunggu verifikasi, tiket maintenance contoh, dan pengumuman terbit.
 
 ### Tur 2 menit (setelah login sebagai owner)
 
@@ -219,8 +228,8 @@ resources/views/{components/ui,layouts,livewire,public,tenant,partials}
 ```
 
 Rute utama:
-`/` · `/rooms` · `/admin/{properties,buildings,floors,room-types,amenities,rooms,tenants,leases,invoices,payments,payment-methods}` ·
-`/tenant/{dashboard,lease,invoices,payments,notifications}`.
+`/` · `/rooms` · `/admin/{properties,buildings,floors,room-types,amenities,rooms,tenants,leases,invoices,payments,payment-methods,maintenance,announcements}` ·
+`/tenant/{dashboard,lease,invoices,payments,maintenance,announcements,notifications}`.
 
 ## Keamanan & Validitas
 
@@ -278,7 +287,7 @@ HTTPS, dan backup database — detail lengkap menyusul di **Phase 10**.
 - [x] Phase 4 — Penagihan (kalkulasi, penagihan berulang, denda, scheduler)
 - [x] Phase 5 — Pembayaran (bukti, verifikasi, refund, notifikasi)
 - [x] Phase 6 — Maintenance (tiket, prioritas, penugasan, SLA)
-- [ ] Phase 7 — Pengumuman & Notifikasi (targeting, reminder otomatis)
+- [~] Phase 7 — Pengumuman & Notifikasi (7A pengumuman ✅ · 7B reminder otomatis)
 - [ ] Phase 8 — Pengeluaran & Laporan (dashboard keuangan/hunian, ekspor CSV/XLSX/PDF)
 - [ ] Phase 9 — Keamanan, Audit & Optimasi (IDOR review, N+1, caching, private file)
 - [ ] Phase 10 — Pengujian & Kesiapan Produksi (backup, monitoring, deployment)

@@ -87,15 +87,21 @@
         </a>
     </x-ui.card>
 
-    <x-ui.card>
-        <div class="flex items-start gap-3">
-            <span class="inline-flex size-11 items-center justify-center rounded-lg bg-primary-50 text-primary-600 dark:bg-primary-950 dark:text-primary-400">
-                <x-ui.icon name="megaphone" class="size-6" />
-            </span>
-            <div>
-                <p class="text-sm font-semibold text-gray-900 dark:text-white">Pengumuman</p>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Belum ada pengumuman terbaru.</p>
+    <x-ui.card padding="p-0">
+        <a href="{{ route('tenant.announcements') }}" wire:navigate class="block">
+            <div class="flex items-start gap-3 p-5">
+                <span class="inline-flex size-11 items-center justify-center rounded-lg bg-primary-50 text-primary-600 dark:bg-primary-950 dark:text-primary-400">
+                    <x-ui.icon name="megaphone" class="size-6" />
+                </span>
+                <div class="min-w-0 flex-1">
+                    <p class="text-sm font-semibold text-gray-900 dark:text-white">Pengumuman</p>
+                    @if ($latestAnnouncement)
+                        <p class="mt-1 truncate text-sm text-gray-500 dark:text-gray-400">{{ $latestAnnouncement->title }}</p>
+                    @else
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Belum ada pengumuman terbaru.</p>
+                    @endif
+                </div>
             </div>
-        </div>
+        </a>
     </x-ui.card>
 </x-layouts.tenant>
