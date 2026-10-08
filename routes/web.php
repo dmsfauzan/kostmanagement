@@ -1,15 +1,21 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\TenantDocumentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\RoomController as PublicRoomController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
+use App\Http\Controllers\Tenant\LeaseController as TenantLeaseController;
 use App\Livewire\Admin\Amenity\Index as AmenityIndex;
 use App\Livewire\Admin\Building\Form as BuildingForm;
 use App\Livewire\Admin\Building\Index as BuildingIndex;
 use App\Livewire\Admin\Floor\Form as FloorForm;
 use App\Livewire\Admin\Floor\Index as FloorIndex;
+use App\Livewire\Admin\Lease\Form as LeaseForm;
+use App\Livewire\Admin\Lease\Index as LeaseIndex;
+use App\Livewire\Admin\Lease\MoveOut as LeaseMoveOut;
+use App\Livewire\Admin\Lease\Show as LeaseShow;
 use App\Livewire\Admin\Property\Form as PropertyForm;
 use App\Livewire\Admin\Property\Index as PropertyIndex;
 use App\Livewire\Admin\Room\Form as RoomForm;
@@ -17,6 +23,10 @@ use App\Livewire\Admin\Room\Index as RoomIndex;
 use App\Livewire\Admin\Room\Map as RoomMap;
 use App\Livewire\Admin\RoomType\Form as RoomTypeForm;
 use App\Livewire\Admin\RoomType\Index as RoomTypeIndex;
+use App\Livewire\Admin\Tenant\Form as TenantForm;
+use App\Livewire\Admin\Tenant\Index as TenantIndex;
+use App\Livewire\Admin\Tenant\Show as TenantShow;
+use App\Livewire\Tenant\Auth\ActivateAccount;
 /*
 |--------------------------------------------------------------------------
 | Public
@@ -32,6 +42,11 @@ Route::view('about', 'public.about')->name('about');
 Route::view('rules', 'public.rules')->name('rules');
 Route::view('faq', 'public.faq')->name('faq');
 Route::view('contact', 'public.contact')->name('contact');
+
+// Tenant account activation (temporary signed URL from invitation email)
+Route::get('tenant/activate/{user}', ActivateAccount::class)
+    ->middleware(['signed', 'throttle:6,1'])
+    ->name('tenant.activate');
 
 /*
 |--------------------------------------------------------------------------
@@ -54,6 +69,10 @@ Route::middleware(['auth', 'active', 'role:tenant'])
     ->name('tenant.')
     ->group(function () {
         Route::get('dashboard', TenantDashboardController::class)->name('dashboard');
+        Route::get('lease', TenantLeaseController::class)->name('lease');
+        Route::get('notifications', function () {
+            return view('tenant.notifications');
+        })->name('notifications');
     });
 
 /*
@@ -112,6 +131,30 @@ Route::middleware(['auth', 'active', 'role:owner,admin,finance,technician'])
             ->middleware('can:room.create')->name('rooms.create');
         Route::get('rooms/{room}/edit', RoomForm::class)
             ->middleware('can:room.update')->name('rooms.edit');
+
+        // Tenants
+        Route::get('tenants', TenantIndex::class)
+            ->middleware('can:tenant.view')->name('tenants');
+        Route::get('tenants/create', TenantForm::class)
+            ->middleware('can:tenant.create')->name('tenants.create');
+        Route::get('tenants/{tenant}', TenantShow::class)
+            ->middleware('can:tenant.view')->name('tenants.show');
+        Route::get('tenants/{tenant}/edit', TenantForm::class)
+            ->middleware('can:tenant.update')->name('tenants.edit');
+        Route::get('tenant-documents/{document}/download', [TenantDocumentController::class, 'download'])
+            ->middleware('can:tenant_document.view')->name('tenant-documents.download');
+
+        // Leases
+        Route::get('leases', LeaseIndex::class)
+            ->middleware('can:lease.view')->name('leases');
+        Route::get('leases/create', LeaseForm::class)
+            ->middleware('can:lease.create')->name('leases.create');
+        Route::get('leases/{lease}', LeaseShow::class)
+            ->middleware('can:lease.view')->name('leases.show');
+        Route::get('leases/{lease}/edit', LeaseForm::class)
+            ->middleware('can:lease.update')->name('leases.edit');
+        Route::get('leases/{lease}/move-out', LeaseMoveOut::class)
+            ->middleware('can:lease.terminate')->name('leases.move-out');
     });
 
 require __DIR__.'/auth.php';

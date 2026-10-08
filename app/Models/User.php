@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
@@ -36,6 +37,11 @@ class User extends Authenticatable
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('status', UserStatus::Active->value);
+    }
+
+    public function tenant(): HasOne
+    {
+        return $this->hasOne(Tenant::class);
     }
 
     public function isActive(): bool

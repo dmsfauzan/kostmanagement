@@ -3,9 +3,11 @@
 use App\Livewire\Admin\Amenity\Index;
 use App\Models\Building;
 use App\Models\Floor;
+use App\Models\Lease;
 use App\Models\Property;
 use App\Models\Room;
 use App\Models\RoomType;
+use App\Models\Tenant;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Livewire\Livewire;
@@ -26,6 +28,8 @@ it('renders every admin listing page', function (string $route) {
     'admin.amenities',
     'admin.rooms',
     'admin.rooms.map',
+    'admin.tenants',
+    'admin.leases',
 ]);
 
 it('renders every admin create form', function (string $route) {
@@ -36,6 +40,8 @@ it('renders every admin create form', function (string $route) {
     'admin.floors.create',
     'admin.room-types.create',
     'admin.rooms.create',
+    'admin.tenants.create',
+    'admin.leases.create',
 ]);
 
 it('renders the edit forms for existing records', function () {
@@ -54,6 +60,18 @@ it('renders the edit forms for existing records', function () {
     $this->get(route('admin.floors.edit', $floor))->assertOk();
     $this->get(route('admin.room-types.edit', $roomType))->assertOk();
     $this->get(route('admin.rooms.edit', $room))->assertOk();
+
+    $tenant = Tenant::factory()->create(['property_id' => $property->id]);
+    $lease = Lease::factory()->create([
+        'tenant_id' => $tenant->id,
+        'room_id' => $room->id,
+        'property_id' => $property->id,
+    ]);
+
+    $this->get(route('admin.tenants.show', $tenant))->assertOk();
+    $this->get(route('admin.tenants.edit', $tenant))->assertOk();
+    $this->get(route('admin.leases.show', $lease))->assertOk();
+    $this->get(route('admin.leases.edit', $lease))->assertOk();
 });
 
 it('creates an amenity through the inline form', function () {

@@ -26,8 +26,8 @@ Production-ready Kost Management System built on **Laravel 13** — Livewire, Bl
 | **0 — Architecture** | System, DB, ERD, module map, route map, permission matrix, service & scheduler plan | ✅ Delivered |
 | **1 — Foundation** | Auth, User, roles/permissions, admin/tenant/public layouts, 12 reusable UI components, settings, audit, dashboards, seeders, test suite | ✅ **Ready — you are here** |
 | **2 — Property & Room Management** | properties, buildings, floors, room types, rooms, amenities, room map, public rooms site | ✅ **Ready — you are here** |
-| **3 — Tenant & Lease** | tenants, documents, invitation flow, leases, move-in/out, deposit settlement | 🔜 Next |
-| **4 — Billing** | invoices, invoice items, monthly generation + idempotency, proration, late fee | Planned |
+| **3 — Tenant & Lease** | tenants, documents, invitation/activation, leases, move-in/out, deposit settlement | ✅ **Ready — you are here** |
+| **4 — Billing** | invoices, invoice items, monthly generation + idempotency, proration, late fee | 🔜 Next |
 | **5 — Payment** | payment methods, proof upload/verification, invoice recalculation | Planned |
 | **6 — Maintenance** | tickets, status workflow, assignment, SLA | Planned |
 | **7 — Announcement & Notification** | announcements, database+mail notifications, reminder scheduler | Planned |
@@ -125,6 +125,7 @@ address instead.
 `DevUserSeeder` does nothing outside `local`/`testing` environments. Set `KOST_DEV_PASSWORD` in `.env` to override the development password without hardcoding it.
 
 - **PropertySeeder** — local/testing-only. Creates **Kost Mawar** with 2 buildings, 3 floors, 3 room types (Standard/Deluxe/Premium), 11 amenities, and 30 rooms across all statuses (available/occupied/maintenance/reserved).
+- **TenantSeeder** — local/testing-only. Links `tenant@kostmanagement.test` to a tenant profile and an **active lease** (room becomes occupied, deposit held), plus 2 extra sample tenants.
 
 ## Roles & Permissions
 
@@ -180,6 +181,12 @@ GET  /facilities /about /rules /faq /contact
 GET  /admin/dashboard                admin.dashboard   (auth + role:owner,admin,finance,technician)
 GET  /admin/properties | buildings | floors | room-types | amenities | rooms
 GET  /admin/rooms/map                visual room map
+GET  /admin/tenants | tenants/create | tenants/{tenant} | tenants/{tenant}/edit
+GET  /admin/leases | leases/create | leases/{lease} | leases/{lease}/edit | leases/{lease}/move-out
+GET  /admin/tenant-documents/{document}/download   (authorized private file)
+GET  /tenant/activate/{user}         signed activation URL (from invite email)
+GET  /tenant/lease                   tenant lease + history
+GET  /tenant/notifications           tenant notification inbox
 GET  /tenant/dashboard               tenant.dashboard  (auth + role:tenant)
 GET  /dashboard                      → redirects to the correct dashboard for the authenticated role
 GET  /profile                        authenticated user profile
@@ -198,6 +205,18 @@ Data model: `properties → buildings → floors → rooms`, with `room_types`, 
 - **Public site** shows only `available` rooms on `/`, `/rooms`, and `/rooms/{slug}`.
 - Business rules enforced: unique room number per property, floor must belong to the chosen building, price ≥ 0, unique building code per property, unique floor level per building.
 - `RoomService` handles room writes (amenity sync, photo storage, audit logging) and `OccupancyService` computes per-status counts and occupancy rate.
+
+## Tenant & Lease Management (Phase 3)
+
+Data model: `tenants → leases → deposits`, plus `tenant_documents` (private disk) and `lease_status_histories`.
+
+- **Tenant CRUD + portal account** (Livewire): personal info, emergency, vehicle, notes; status follows the account lifecycle (prospect → invited → active → moved_out).
+- **Invitation**: creating a tenant with an email auto-provisions a `tenant`-role `User` (status inactive) and sends `TenantInvitationNotification` (mail + database record).
+- **Activation**: temporary **signed URL** `/tenant/activate/{user}` → Livewire component sets name/password → both accounts become active.
+- **Lease lifecycle**: draft → active → terminated (with required reason). Activation requires no overlap for room *and* tenant (checked inside a room-locked transaction), sets room `occupied`, and holds the deposit record.
+- **Move-out**: settlement form validates `deduction + refund ≤ amount`, writes `Deposit` (held/partially_returned/returned/forfeited), terminates the lease, and frees the room back to `available`.
+- **Portal tenant**: dashboard shows room, lease, days remaining and deposit; `/tenant/lease` lists active + history. Queries are always scoped to the authenticated tenant.
+- **Seeded demo**: tenant `tenant@kostmanagement.test` is active with an occupied room and held deposit.
 
 ## Key Decisions
 

@@ -1,9 +1,8 @@
 @php
     $items = array_values(array_filter([
         ['route' => 'tenant.dashboard', 'label' => 'Beranda', 'icon' => 'home'],
-        ['route' => 'tenant.invoices', 'label' => 'Tagihan', 'icon' => 'banknotes'],
-        ['route' => 'tenant.payments', 'label' => 'Bayar', 'icon' => 'credit-card'],
-        ['route' => 'tenant.maintenance', 'label' => 'Keluhan', 'icon' => 'wrench'],
+        ['route' => 'tenant.lease', 'label' => 'Kontrak', 'icon' => 'document-text'],
+        ['route' => 'tenant.notifications', 'label' => 'Pesan', 'icon' => 'bell'],
         \Illuminate\Support\Facades\Route::has('profile') ? ['route' => 'profile', 'label' => 'Profil', 'icon' => 'user'] : null,
     ], fn ($item) => $item && \Illuminate\Support\Facades\Route::has($item['route'])));
 @endphp
