@@ -27,8 +27,9 @@ Production-ready Kost Management System built on **Laravel 13** — Livewire, Bl
 | **1 — Foundation** | Auth, User, roles/permissions, admin/tenant/public layouts, 12 reusable UI components, settings, audit, dashboards, seeders, test suite | ✅ **Ready — you are here** |
 | **2 — Property & Room Management** | properties, buildings, floors, room types, rooms, amenities, room map, public rooms site | ✅ **Ready — you are here** |
 | **3 — Tenant & Lease** | tenants, documents, invitation/activation, leases, move-in/out, deposit settlement | ✅ **Ready** |
-| **4A — Billing Foundation** | invoices, invoice items, calculation services, manual/admin CRUD, tenant portal, issue notifications | ✅ **Ready — you are here** |
-| **4B — Recurring Billing** | monthly generation + idempotency, overdue marking, late fees, scheduler | 🔜 Next |
+| **4A — Billing Foundation** | invoices, invoice items, calculation services, manual/admin CRUD, tenant portal, issue notifications | ✅ **Ready** |
+| **4B — Recurring Billing** | monthly generation + idempotency, overdue marking, late fees, scheduler | ✅ **Ready — you are here** |
+| **5 — Payment** | payment methods, proof upload/verification, invoice recalculation | 🔜 Next |
 | **5 — Payment** | payment methods, proof upload/verification, invoice recalculation | Planned |
 | **6 — Maintenance** | tickets, status workflow, assignment, SLA | Planned |
 | **7 — Announcement & Notification** | announcements, database+mail notifications, reminder scheduler | Planned |
@@ -232,6 +233,21 @@ Data model: `invoices → invoice_items`. Invoice columns `subtotal/discount/lat
 - **Admin UI**: invoice list (filters + billed/outstanding/overdue summary), manual create with dynamic items, detail with item add/remove, issue, void.
 - **Tenant portal**: `/tenant/invoices` + detail (own only), dashboard "Tagihan Aktif" widget, bottom-nav **Tagihan**.
 - **Seeded demo**: an issued invoice for the sample active lease.
+
+## Billing (Phase 4B)
+
+- **`billing:generate-invoices`** (`--period`, `--lease`): dispatches/ runs `GenerateInvoiceJob` per eligible lease (active/expiring, within the period). Job creates the invoice and issues it; `unique(lease_id, billing_period)` + `firstOrCreate` semantics make re-runs safe.
+- **`billing:mark-overdue`**: flips unpaid invoices past `due_date` to `overdue`, records audit, dispatches `InvoiceOverdue` → `InvoiceOverdueNotification` (mail + database).
+- **`billing:apply-late-fees`**: deterministically recalculates the late-fee line item per invoice (recomputed, never accumulating) using `LateFeeCalculator`.
+- Scheduled in `routes/console.php`: generate on the 1st of the month, mark-overdue and apply-late-fees daily.
+
+### Scheduler
+
+The billing jobs run from Laravel's scheduler. On the Laragon dev box this needs `php artisan schedule:run` every minute (Task Scheduler):
+
+```powershell
+schtasks /create /tn "KostManagement Scheduler" /tr "powershell -NoProfile -Command cd C:\laragon\www\KostManagement; php artisan schedule:run" /sc minute /mo 1
+```
 
 ## Key Decisions
 

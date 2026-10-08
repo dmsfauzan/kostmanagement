@@ -166,6 +166,31 @@ class BillingService
         return $this->recalculate($invoice->refresh());
     }
 
+    /**
+     * Replace (or clear) the late-fee line item with a deterministic amount.
+     */
+    public function syncLateFee(Invoice $invoice, int $amount): Invoice
+    {
+        $item = $invoice->items()->where('type', InvoiceItemType::LateFee->value)->first();
+
+        if ($amount <= 0) {
+            $item?->delete();
+        } elseif ($item) {
+            $item->update(['quantity' => 1, 'unit_price' => $amount, 'amount' => $amount]);
+        } else {
+            $invoice->items()->create([
+                'type' => InvoiceItemType::LateFee,
+                'description' => 'Denda keterlambatan',
+                'quantity' => 1,
+                'unit_price' => $amount,
+                'amount' => $amount,
+                'sort_order' => (int) $invoice->items()->max('sort_order') + 1,
+            ]);
+        }
+
+        return $this->recalculate($invoice->refresh());
+    }
+
     public function issue(Invoice $invoice): Invoice
     {
         if ($invoice->status !== InvoiceStatus::Draft) {

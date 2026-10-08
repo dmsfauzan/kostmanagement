@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Events\InvoiceIssued;
+use App\Events\InvoiceOverdue;
 use App\Listeners\SendInvoiceIssuedNotification;
+use App\Listeners\SendInvoiceOverdueNotification;
 use App\Models\User;
 use App\Services\AuditService;
 use App\Services\BillingService;
@@ -47,6 +49,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Event::listen(InvoiceIssued::class, SendInvoiceIssuedNotification::class);
+        Event::listen(InvoiceOverdue::class, SendInvoiceOverdueNotification::class);
 
         // Strict mode surfaces N+1 queries and silent mass-assignment
         // mistakes during local development without affecting production.
