@@ -1,338 +1,280 @@
 # Kost Management System
 
-Production-ready Kost Management System built on **Laravel 13** — Livewire, Blade, Tailwind CSS, and MySQL.
+**Sistem manajemen kost end-to-end: setiap angka keuangan berasal dari transaksi yang tercatat — tagihan akurat, pembayaran terverifikasi, dan tidak ada data yang dihapus paksa.**
 
-> **Phase 1 — Foundation** is ready. The operational phases that follow will not break what is already runnable.
+[![Laravel](https://img.shields.io/badge/Laravel-13-FF2D20?logo=laravel&logoColor=white)](https://laravel.com)
+[![PHP](https://img.shields.io/badge/PHP-8.3-777BB4?logo=php&logoColor=white)](https://www.php.net)
+[![Livewire](https://img.shields.io/badge/Livewire-3-4E56A8)](https://livewire.laravel.com)
+[![Tailwind](https://img.shields.io/badge/Tailwind_CSS-3-38BDF8?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql&logoColor=white)](https://www.mysql.com)
+[![Tests](https://img.shields.io/badge/tests-156_passing-brightgreen)](#pengujian)
+[![License](https://img.shields.io/badge/license-MIT-blue)](#kontribusi--lisensi)
 
-## Stack
+[Fitur](#fitur) · [Mulai Cepat](#mulai-cepat) · [Arsitektur](#arsitektur) · [Keamanan](#keamanan--validitas) · [Pengujian](#pengujian) · [Roadmap](#roadmap)
 
-| Layer | Choice |
+---
+
+## Kenapa proyek ini
+
+Kebanyakan sistem kost menyimpan status "Lunas" yang bisa diubah bebas. Aplikasi ini tidak. Di sini **item tagihan dan pembayaran terverifikasi adalah satu-satunya sumber kebenaran**:
+
+```mermaid
+flowchart LR
+    I[Invoice Items<br/>rencana tagihan] --> S[Invoice<br/>subtotal · diskon · denda]
+    P[Pembayaran diverifikasi] --> R[amount_paid = Σ verified]
+    S --> R
+    R --> D{amount_due}
+    D -->|0 & ada bayar| PAID[Lunas]
+    D -->|sisa > 0| PART[Dibayar Sebagian]
+    D -->|lewat jatuh tempo| OD[Jatuh Tempo + Denda]
+```
+
+- **Tidak ada angka ajaib.** Setiap `total`/`amount_due` dihitung ulang dari line item + pembayaran terverifikasi (bukan diketik manual).
+- **Idempoten & aman.** Penagihan bulanan memakai constraint unik `(lease_id, billing_period)` + transaksi — dijalankan dua kali tidak menghasilkan tagihan ganda.
+- **Tidak ada penghapusan histori.** Koreksi lewat **void**, **reversal/refund**, atau **adjustment** — bukan `DELETE`.
+
+## Fitur
+
+### Phase 1 — Fondasi
+
+| Modul | Keterangan |
 |---|---|
-| Framework | Laravel 13 · PHP 8.3 |
-| Frontend | Livewire 3 + Blade + Tailwind CSS 3 + Vite |
-| Auth | Laravel Breeze (Livewire / Volt) |
-| Authorization | [spatie/laravel-permission](https://github.com/spatie/laravel-permission) + Policies + per-route/middleware `role:`/`active` |
-| Database | MySQL 8 · Laragon-friendly `kost_management` DB |
-| Queues / Cache | `database` driver (no Redis required at this stage) |
-| Notifications | `database` + `log` mail |
-| Testing | PHPUnit + Pest (incl. Pest 4, Pest Laravel) |
+| Autentikasi | Breeze + Livewire (login, register, reset password, verifikasi email) |
+| RBAC | `spatie/laravel-permission` — **66 permission**, 5 peran, owner bypass via `Gate::before` |
+| Layout | Admin (sidebar + topbar), Tenant (mobile-first + bottom-nav), Publik |
+| Komponen UI | `x-ui.*` reusable: button, card, badge, status-badge, alert, stat-card, table, input, select, textarea, money-input, file-upload, modal, confirm-dialog, tabs |
+| Settings | Tabel `settings` + `SettingsService` (cache, cast) |
+| Audit | `audit_logs` **append-only** (menolak update/delete) + `AuditService` |
+| Uang | `bigInteger` rupiah (tanpa float) + helper `Money` (`Rp 1.500.000`) |
 
-> Monetary values are stored as whole-rupiah `bigInteger` values (no floats).
+### Phase 2 — Properti & Kamar
 
-## Features by Phase
+| Modul | Keterangan |
+|---|---|
+| Properti → Gedung → Lantai | Hirarki lengkap, kode unik per properti |
+| Tipe Kamar | Harga & deposit bawaan, kapasitas, fasilitas |
+| Kamar | Nomor unik per properti, harga, deposit, status, foto |
+| Fasilitas | Amenity per kamar & per tipe kamar |
+| Peta Kamar | Visual per gedung/lantai, tile berwarna sesuai status + ringkasan hunian |
+| Situs Publik | `/`, `/rooms`, `/rooms/{slug}` (hanya kamar **tersedia**), fasilitas, tentang, aturan, FAQ, kontak |
 
-| Phase | What landed | Status |
-|---|---|---|
-| **0 — Architecture** | System, DB, ERD, module map, route map, permission matrix, service & scheduler plan | ✅ Delivered |
-| **1 — Foundation** | Auth, User, roles/permissions, admin/tenant/public layouts, 12 reusable UI components, settings, audit, dashboards, seeders, test suite | ✅ **Ready — you are here** |
-| **2 — Property & Room Management** | properties, buildings, floors, room types, rooms, amenities, room map, public rooms site | ✅ **Ready — you are here** |
-| **3 — Tenant & Lease** | tenants, documents, invitation/activation, leases, move-in/out, deposit settlement | ✅ **Ready** |
-| **4A — Billing Foundation** | invoices, invoice items, calculation services, manual/admin CRUD, tenant portal, issue notifications | ✅ **Ready** |
-| **4B — Recurring Billing** | monthly generation + idempotency, overdue marking, late fees, scheduler | ✅ **Ready** |
-| **5A — Payment Foundation** | payment methods, proof upload, verify/reject, invoice recalculation | ✅ **Ready** |
-| **5B — Payment Polish** | refund/cancel, payment notifications (submit/verify/reject) | ✅ **Ready — you are here** |
-| **6 — Maintenance** | tickets, status workflow, assignment, SLA | 🔜 Next |
-| **5 — Payment** | payment methods, proof upload/verification, invoice recalculation | Planned |
-| **6 — Maintenance** | tickets, status workflow, assignment, SLA | Planned |
-| **7 — Announcement & Notification** | announcements, database+mail notifications, reminder scheduler | Planned |
-| **8 — Expense & Reporting** | expenses, financial/occupancy dashboards, reports + exports | Planned |
-| **9 — Security & Optimization** | IDOR review, N+1, caching, rate limits, private-file endpoints | Planned |
-| **10 — Production Readiness** | backup, queue/scheduler ops, deployment notes, full coverage | Planned |
+### Phase 3 — Penghuni & Kontrak
 
-## Requirements
+| Modul | Keterangan |
+|---|---|
+| Penghuni | Data pribadi, kontak darurat, kendaraan, dokumen (KTP/kontrak, private disk) |
+| Undangan Akun | Buat penghuni → akun portal otomatis + undangan email (mail + database) |
+| Aktivasi | **Signed URL** `/tenant/activate/{user}` → atur nama & kata sandi |
+| Kontrak Sewa | `draft → active → terminated`, kode `LSE-YYYY-XXXX`, riwayat status |
+| Aturan Kontrak | Cegah tumpang tindih kamar **dan** penghuni (transaksi + row lock) |
+| Move-in / Move-out | Aktivasi → kamar `occupied` + deposit `held`; move-out → settlement deposit + kamar `available` |
 
-- PHP ≥ 8.3
-- Composer 2
-- Node ≥ 18, `npm`
-- MySQL 8
-- Laragon (or any MySQL-backed PHP 8.3 dev environment)
+### Phase 4 — Penagihan
 
-## Installation
+| Modul | Keterangan |
+|---|---|
+| Tagihan | `invoices` + `invoice_items`, status `draft → issued → partially_paid → paid → overdue → void` |
+| Kalkulasi | `BillingService`, `LateFeeCalculator` (harian / persen basis-point), `ProrationCalculator`, `InvoiceNumberGenerator` |
+| Penagihan Berulang | `billing:generate-invoices` (idempoten per periode) + `GenerateInvoiceJob` |
+| Jatuh Tempo & Denda | `billing:mark-overdue`, `billing:apply-late-fees` (deterministik, tidak menumpuk) |
+| Portal Tenant | Daftar + detail tagihan (`/tenant/invoices`), widget "Tagihan Aktif" |
+| Notifikasi | Tagihan terbit & jatuh tempo (mail + database) |
+
+### Phase 5 — Pembayaran
+
+| Modul | Keterangan |
+|---|---|
+| Metode Pembayaran | Transfer, Tunai, E-Wallet, QRIS (referensi data) |
+| Pengajuan Pembayaran | Tenant pilih tagihan/metode + unggah bukti (private disk) → `pending` |
+| Verifikasi | Admin **verify** → hitung ulang invoice → `paid` / `partially_paid`; **reject** + alasan |
+| Refund / Cancel | Refund membalik kalkulasi invoice + audit; cancel oleh admin atau tenant |
+| Notifikasi | `PaymentSubmitted` → admin, `PaymentVerified`/`PaymentRejected` → tenant |
+
+### Fitur publik
+
+- Katalog kamar tersedia dengan filter tipe + pencarian nomor, halaman detail kamar (foto, fasilitas, harga, aturan).
+- Halaman statis: fasilitas, tentang, aturan, FAQ, kontak.
+
+## Arsitektur
+
+```mermaid
+flowchart TB
+    subgraph UI[Browser]
+        B[Blade + Livewire 3 + Alpine + Tailwind]
+    end
+    subgraph APP[Laravel 13]
+        MW[Middleware: auth, active, role, can]
+        LW[Livewire Components]
+        SVC[Services: BillingService · PaymentService<br/>LeaseService · TenantService · DepositService<br/>OccupancyService · SettingsService · AuditService]
+        POL[Policies & Gates]
+    end
+    subgraph DB[(MySQL 8)]
+        LEDGER[(invoice_items + payments<br/>single source of truth)]
+        CACHE[(invoices<br/>cached aggregate)]
+    end
+    B --> MW --> LW --> SVC --> DB
+    SVC --> LEDGER --> CACHE
+```
+
+**Penomoran dokumen** memakai generator per tahun (`INV-YYYY-XXXX`, `LSE-YYYY-XXXX`) dengan pengecekan unik.
+
+**Formula tagihan** (identik di kalkulasi, dashboard, dan portal):
+
+```
+subtotal        = Σ item (sewa, listrik, air, internet, parkir, other, deposit)
+total_amount    = subtotal − diskon + denda + penyesuaian
+amount_paid     = Σ pembayaran berstatus verified
+amount_due      = max(0, total_amount − amount_paid)
+```
+
+## Mulai Cepat
+
+### Persyaratan
+
+| Tool | Versi |
+|---|---|
+| PHP | ^8.3 (`pdo_mysql`, `mbstring`, `zip`, `gd`, `intl`, `xml`, `fileinfo`) |
+| Composer | ^2.10 |
+| Node + npm | ^24 + ^11 |
+| MySQL | 8.0 (Laragon membundel semuanya) |
+
+### Instalasi (5 menit)
 
 ```bash
-git clone https://github.com/dmsfauzan/kostmanagement.git kostmanagement
-cd kostmanagement
 composer install
 cp .env.example .env
+
+# buat database kost_management di MySQL (utf8mb4_unicode_ci)
 php artisan key:generate
-```
-
-Configure `DB_*` in `.env` (database `kost_management` is the default):
-
-```env
-APP_NAME="Kost Management"
-APP_TIMEZONE=Asia/Jakarta
-APP_LOCALE=id
-APP_FAKER_LOCALE=id_ID
-
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=kost_management
-DB_USERNAME=root
-DB_PASSWORD=
-```
-
-Then:
-
-```bash
 php artisan migrate --seed
+
 npm install
 npm run build
+
+php artisan serve
 ```
 
-For dev (serves the app + re-compiles Tailwind live):
+Buka `http://127.0.0.1:8000` dan masuk dengan akun demo di bawah.
+
+> Windows + Laragon? Aktifkan virtual host agar app disajikan dari folder `public`
+> (`http://kostmanagement.test`) — lihat catatan Laragon di bawah. Jangan akses lewat
+> sub-path seperti `/KostManagement/public` (Livewire memakai URL root-relatif).
+
+### Akun Demo
+
+| Email | Password | Peran |
+|---|---|---|
+| `owner@kostmanagement.test` | `password` | Owner (akses penuh) |
+| `admin@kostmanagement.test` | `password` | Admin operasional |
+| `finance@kostmanagement.test` | `password` | Keuangan |
+| `technician@kostmanagement.test` | `password` | Teknisi |
+| `tenant@kostmanagement.test` | `password` | Penghuni |
+
+> Kata sandi mengikuti `KOST_DEV_PASSWORD` (default `password`). Seeder demo hanya berjalan di
+> lingkungan `local`/`testing`.
+
+Seeder membuat **Kost Mawar** (2 gedung, 3 lantai, 3 tipe, 11 fasilitas, 30 kamar), penghuni
+`tenant@kostmanagement.test` dengan **kontrak aktif** (kamar `occupied`, deposit `held`), invoice
+terbit, dan satu pembayaran menunggu verifikasi.
+
+### Tur 2 menit (setelah login sebagai owner)
+
+1. **Properti → Kamar** — lihat daftar + kartu, filter status, buka **Peta Kamar**.
+2. **Penghuni** — buat penghuni baru → undangan aktivasi terkirim.
+3. **Kontrak Sewa** — aktifkan kontrak (kamar jadi `occupied`, deposit dibuat).
+4. **Tagihan** — terbitkan tagihan bulanan (otomatis) atau buat manual.
+5. Masuk sebagai `tenant@kostmanagement.test` — **Tagihan → Bayar** → unggah bukti.
+6. Kembali ke admin **Pembayaran** → **Verifikasi** → invoice menjadi **Lunas**.
+
+### Catatan Laragon
+
+Proyek berada di `C:\laragon\www\KostManagement`. Laragon memetakan folder Laravel ke `public/`:
+
+- Akses di **`http://kostmanagement.test`** dengan `APP_URL=http://kostmanagement.test`.
+- Bila belum resolve: Laragon → **Stop All** → **Start All** (regenerasi `auto.KostManagement.test.conf`
+  + entri hosts), lalu mulai ulang.
+
+## Struktur Proyek
+
+```
+app/Enums/                      # status bisnis (Room, Lease, Invoice, Payment, ...)
+app/Services/                   # BillingService, PaymentService, LeaseService, ...
+app/Jobs/                       # GenerateInvoiceJob
+app/Console/Commands/           # billing:generate-invoices, mark-overdue, apply-late-fees
+app/Events + Listeners + Notifications/
+app/Livewire/Admin/{Property,Building,Floor,RoomType,Amenity,Room,Tenant,Lease,Invoice,Payment,PaymentMethod}
+app/Livewire/Tenant/{Auth,Payment}
+app/Http/Controllers/           # Public, Tenant, Admin
+resources/views/{components/ui,layouts,livewire,public,tenant,partials}
+```
+
+Rute utama:
+`/` · `/rooms` · `/admin/{properties,buildings,floors,room-types,amenities,rooms,tenants,leases,invoices,payments,payment-methods}` ·
+`/tenant/{dashboard,lease,invoices,payments,notifications}`.
+
+## Keamanan & Validitas
+
+- Session auth + CSRF, password di-hash, **rate-limit login** (5/menit per email+IP).
+- **RBAC granular** (66 permission) di tiga lapis: middleware `role:`/`can:`, `Gate`, dan cek ulang di dalam aksi.
+- **Akun nonaktif otomatis ditolak** (`EnsureUserIsActive`).
+- **Bukti & dokumen sensitif** disimpan di **private disk** dan hanya diunduh lewat endpoint ber-authorize (admin `payment.view` / tenant pemilik).
+- **Audit trail append-only** untuk setiap perubahan penting (lease, invoice, payment, deposit).
+- Validasi di frontend *dan* backend; error teknis tidak diekspos ke pengguna (`X-Request-ID` untuk tracing).
+- Aturan integritas: kamar tidak boleh punya dua kontrak aktif yang tumpang tindih, tidak ada tagihan ganda per periode, `amount_paid` hanya dari pembayaran terverifikasi, tidak ada hard-delete data keuangan.
+
+## Pengujian
 
 ```bash
-composer dev
-# or individually: php artisan serve | npm run dev | php artisan queue:listen
+php artisan test
+php artisan test tests/Feature/Payment            # fokus alur pembayaran
+vendor/bin/pint --test                            # gaya kode
 ```
 
-### Local development with Laragon
+**156 test hijau** meliputi: kalkulasi tagihan (diskon/denda/prorata), **idempotensi penagihan
+bulanan** (2× jalan ⇒ 1 invoice), verifikasi pembayaran (lunas/sebagian/lebih bayar), refund,
+isolasi data antar-tenant, otorisasi per peran, dan smoke-render seluruh halaman admin/tenant/publik.
 
-This project lives in `C:\laragon\www\KostManagement`. Laragon's auto virtual hosts map Laravel folders to their
-`public/` directory, so the app should be accessed at:
+## Build & Deploy
 
-**http://kostmanagement.test** — with `APP_URL=http://kostmanagement.test` in `.env`.
-
-> **Never** access the app through a sub-path such as `http://localhost/KostManagement/public`.
-> Livewire loads its JavaScript from a root-relative URL (`/livewire/livewire.js`) which 404s under a
-> sub-path. Without that script, `<form wire:submit>` falls back to a native GET submit — credentials
-> leak into the URL (`.../login?email=...&password=...`) and login appears broken.
-
-If `kostmanagement.test` does not resolve:
-
-1. Laragon → **Stop All** → **Start All** (regenerates `etc/apache2/sites-enabled/auto.KostManagement.test.conf`
-   and appends `127.0.0.1  KostManagement.test  #laragon magic!` to the hosts file).
-2. Confirm `C:\Windows\System32\drivers\etc\hosts` contains that line (add it manually as admin if needed).
-3. Restart and open `http://kostmanagement.test`.
-
-Prefer the built-in server? Run `php artisan serve`, set `APP_URL=http://localhost:8000`, and open that
-address instead.
-
-## Seed Data
-
-`DatabaseSeeder` fully wires:
-
-- **RolePermissionSeeder** — creates the permission catalogue and roles `owner` / `admin` / `finance` / `technician` / `tenant`. Owner is given every ability via the `Gate::before` hook.
-- **SettingsSeeder** — seeds a database-backed `Settings` table (currency, billing, reminder, maintenance, upload defaults). Runtime lookups are cached via `SettingsService`.
-- **DevUserSeeder** — local/testing-only accounts (all with password `password` unless `KOST_DEV_PASSWORD` is set):
-
-| Role | Email | Name |
-|---|---|---|
-| `owner` | `owner@kostmanagement.test` | Budi Pemilik |
-| `admin` | `admin@kostmanagement.test` | Siti Admin |
-| `finance` | `finance@kostmanagement.test` | Dewi Keuangan |
-| `technician` | `technician@kostmanagement.test` | Agus Teknisi |
-| `tenant` | `tenant@kostmanagement.test` | Rina Penghuni |
-
-`DevUserSeeder` does nothing outside `local`/`testing` environments. Set `KOST_DEV_PASSWORD` in `.env` to override the development password without hardcoding it.
-
-- **PropertySeeder** — local/testing-only. Creates **Kost Mawar** with 2 buildings, 3 floors, 3 room types (Standard/Deluxe/Premium), 11 amenities, and 30 rooms across all statuses (available/occupied/maintenance/reserved).
-- **TenantSeeder** — local/testing-only. Links `tenant@kostmanagement.test` to a tenant profile and an **active lease** (room becomes occupied, deposit held), plus 2 extra sample tenants.
-- **BillingSeeder** — local/testing-only. Issues an invoice for the sample active lease so the tenant portal shows a real bill.
-- **PaymentMethodSeeder** — always seeded (reference data): 4 payment methods for every environment.
-- **PaymentSeeder** — local/testing-only. Creates a pending payment on the sample invoice to test the verification flow.
-
-## Roles & Permissions
-
-Full catalogue (66 permissions across 20 modules):
-
-```
-dashboard.view,
-property.view/create/update,
-building.view/create/update/delete,
-floor.view/create/update/delete,
-room_type.view/create/update/delete,
-room.view/create/update/delete,
-amenity.view/create/update/delete,
-tenant.view/create/update,
-tenant_document.view/create/delete,
-lease.view/create/update/terminate,
-invoice.view/create/update/void,
-payment.view/create/verify/reject,
-expense.view/create/update/delete,
-maintenance.view/create/update/assign/close,
-announcement.view/create/update/delete,
-report.view/export,
-user.view/create/update/delete,
-role.view/update,
-settings.view/update,
-audit.view
+```bash
+npm run build            # produksi → public/build
+php artisan storage:link # symlink file publik (foto kamar, logo)
 ```
 
-Role matrix (endpoints are filtered via `role:` middleware and `Gate::before` for owners):
+### Scheduler (penagihan & denda)
 
-| Ability | Owner | Admin | Finance | Technician | Tenant |
-|---|---:|---:|---:|---:|---:|
-| `dashboard.view` | + | + | + | + | + (own) |
-| property / building / floor / room / amenity | + | + | – | room view | – |
-| tenant / lease | + | + | view | view | own |
-| invoice / payment | + | + | + (void) | – | own view/create |
-| expense | + | view/create/update | + | – | – |
-| maintenance | + | + | view | + (assign/close) | own create/view |
-| announcement | + | + | – | – | view |
-| report.* | + | + | + | – | – |
-| user / role / audit | + | user view (+/- create) | – | – | – |
-| settings.* | + | view | – | – | – |
-
-Authorization is enforced at three layers: route middleware, spatie permissions, and (in later phases) Policies per model (record-level / IDOR guard).
-
-## Routes
-
-```
-GET  /                               public.home
-GET  /rooms                          public rooms (available only)
-GET  /rooms/{slug}                   room detail (404 when not available)
-GET  /facilities /about /rules /faq /contact
-GET  /admin/dashboard                admin.dashboard   (auth + role:owner,admin,finance,technician)
-GET  /admin/properties | buildings | floors | room-types | amenities | rooms
-GET  /admin/rooms/map                visual room map
-GET  /admin/tenants | tenants/create | tenants/{tenant} | tenants/{tenant}/edit
-GET  /admin/leases | leases/create | leases/{lease} | leases/{lease}/edit | leases/{lease}/move-out
-GET  /admin/tenant-documents/{document}/download   (authorized private file)
-GET  /admin/invoices | invoices/create | invoices/{invoice_number}
-GET  /admin/payments | payments/{payment} | payments/{payment}/proof
-GET  /admin/payment-methods
-GET  /tenant/activate/{user}         signed activation URL (from invite email)
-GET  /tenant/lease                   tenant lease + history
-GET  /tenant/invoices | invoices/{invoice}   tenant invoices (own only)
-GET  /tenant/payments | payments/create | payments/{payment}/proof
-GET  /tenant/notifications           tenant notification inbox
-GET  /tenant/dashboard               tenant.dashboard  (auth + role:tenant)
-GET  /dashboard                      → redirects to the correct dashboard for the authenticated role
-GET  /profile                        authenticated user profile
-... plus the full Breeze/Livewire auth set (/login, /register, /forgot-password, /reset-password, /verify-email, /confirm-password)
+```bash
+php artisan schedule:list
+# generate tagihan tgl 1; mark-overdue & apply-late-fees harian
 ```
 
-Every admin page is guarded by a `can:<module>.<action>` middleware, and mutating actions re-check the permission inside the component.
-
-## Property & Room Management (Phase 2)
-
-Data model: `properties → buildings → floors → rooms`, with `room_types`, `amenities` (+ `room_amenity` / `room_type_amenity` pivots) and `room_photos`.
-
-- **Admin CRUD** (Livewire, class-based) for properties, buildings, floors, room types, amenities, and rooms.
-- **Room list** offers a table **and** card view, plus search, status filter, and property/building filters.
-- **Room map** (`/admin/rooms/map`) groups rooms by building → floor with colour-coded status tiles and an occupancy summary.
-- **Public site** shows only `available` rooms on `/`, `/rooms`, and `/rooms/{slug}`.
-- Business rules enforced: unique room number per property, floor must belong to the chosen building, price ≥ 0, unique building code per property, unique floor level per building.
-- `RoomService` handles room writes (amenity sync, photo storage, audit logging) and `OccupancyService` computes per-status counts and occupancy rate.
-
-## Tenant & Lease Management (Phase 3)
-
-Data model: `tenants → leases → deposits`, plus `tenant_documents` (private disk) and `lease_status_histories`.
-
-- **Tenant CRUD + portal account** (Livewire): personal info, emergency, vehicle, notes; status follows the account lifecycle (prospect → invited → active → moved_out).
-- **Invitation**: creating a tenant with an email auto-provisions a `tenant`-role `User` (status inactive) and sends `TenantInvitationNotification` (mail + database record).
-- **Activation**: temporary **signed URL** `/tenant/activate/{user}` → Livewire component sets name/password → both accounts become active.
-- **Lease lifecycle**: draft → active → terminated (with required reason). Activation requires no overlap for room *and* tenant (checked inside a room-locked transaction), sets room `occupied`, and holds the deposit record.
-- **Move-out**: settlement form validates `deduction + refund ≤ amount`, writes `Deposit` (held/partially_returned/returned/forfeited), terminates the lease, and frees the room back to `available`.
-- **Portal tenant**: dashboard shows room, lease, days remaining and deposit; `/tenant/lease` lists active + history. Queries are always scoped to the authenticated tenant.
-- **Seeded demo**: tenant `tenant@kostmanagement.test` is active with an occupied room and held deposit.
-
-## Billing (Phase 4A)
-
-Data model: `invoices → invoice_items`. Invoice columns `subtotal/discount/late_fee/adjustment/total/amount_paid/amount_due` are **cached sums** recomputed by `BillingService::recalculate()` from line items (single source of truth).
-
-- **Calculation services** (pure, testable): `BillingService`, `LateFeeCalculator` (fixed-daily or percentage in **basis points**, `500 = 5.00%`), `ProrationCalculator` (configurable via settings), `InvoiceNumberGenerator` (`INV-{year}-{seq}`).
-- **Idempotency**: recurring invoices carry `billing_period` with a DB `unique(lease_id, billing_period)`; manual invoices use `billing_period = NULL` (multiple allowed).
-- **Lifecycle**: draft → issued (dispatches `InvoiceIssued` → `InvoiceIssuedNotification` mail + database) → void (row kept, reason required). Paid/partially-paid arrives with Phase 5.
-- **Admin UI**: invoice list (filters + billed/outstanding/overdue summary), manual create with dynamic items, detail with item add/remove, issue, void.
-- **Tenant portal**: `/tenant/invoices` + detail (own only), dashboard "Tagihan Aktif" widget, bottom-nav **Tagihan**.
-- **Seeded demo**: an issued invoice for the sample active lease.
-
-## Billing (Phase 4B)
-
-- **`billing:generate-invoices`** (`--period`, `--lease`): dispatches/ runs `GenerateInvoiceJob` per eligible lease (active/expiring, within the period). Job creates the invoice and issues it; `unique(lease_id, billing_period)` + `firstOrCreate` semantics make re-runs safe.
-- **`billing:mark-overdue`**: flips unpaid invoices past `due_date` to `overdue`, records audit, dispatches `InvoiceOverdue` → `InvoiceOverdueNotification` (mail + database).
-- **`billing:apply-late-fees`**: deterministically recalculates the late-fee line item per invoice (recomputed, never accumulating) using `LateFeeCalculator`.
-- Scheduled in `routes/console.php`: generate on the 1st of the month, mark-overdue and apply-late-fees daily.
-
-## Payment (Phase 5A)
-
-Data model: `payment_methods` (reference data) and `payments` (proof on the **private disk**).
-
-- **Tenant submits** a payment (choose invoice/method, amount, proof) → stays `pending`; the **invoice is never changed** until verification.
-- **Admin verifies** → `PaymentService::recalculateInvoice()` derives `amount_paid` from verified payments, sets `amount_due`, and flips the invoice to `paid` / `partially_paid`. **Reject** leaves the invoice untouched; **refund** (verified payment) reverses the calculation; pending payments can be **cancelled**.
-- Proof is required for non-cash methods; **cash** is recorded directly by admin as already verified (`recordManual`).
-- Overpayment is allowed (amount due clamps to 0, the excess is visible as "overpaid").
-- Every financial change writes an `audit_logs` entry; no payment is ever hard-deleted.
-- **Notifications**: `PaymentSubmitted` → admins; `PaymentVerified` / `PaymentRejected` → tenant (mail + database). **Refund** reverses the invoice and writes an audit entry; pending payments can be **cancelled** by admin or by the tenant.
-- **Admin UI**: payment list (filters + pending/verified totals), detail (view proof, verify/reject/refund), and payment-method management.
-- **Tenant portal**: `/tenant/payments` + `/tenant/payments/create` (bottom-nav **Bayar**); proof download is authorized per-tenant.
-- **Seeded demo**: 4 payment methods (always) + a pending payment on the sample invoice (local).
-
-### Scheduler
-
-The billing jobs run from Laravel's scheduler. On the Laragon dev box this needs `php artisan schedule:run` every minute (Task Scheduler):
+Di Windows/Laragon, jalankan scheduler tiap menit:
 
 ```powershell
 schtasks /create /tn "KostManagement Scheduler" /tr "powershell -NoProfile -Command cd C:\laragon\www\KostManagement; php artisan schedule:run" /sc minute /mo 1
 ```
 
-## Key Decisions
+### Produksi
 
-- **Single-owner, multi-property ready** — every business entity carries `property_id` from Phase 2 onward, so a second property does not require a rewrite.
-- **Private vs. public storage** — `private` disk for KTP/contract/proof files (served only via authorized endpoint), `public` disk for room photos/logo. No private path is ever exposed.
-- **Append-only audit log** — `AuditLog` refuses `update()`/`delete()`; all important records write an `audit_logs` entry via `AuditService`.
-- **Settings as a database-backed, cached service** — everything that was formerly a magic string or hard-coded constant (invoice prefix, due days, late-fee formula, reminder schedule) is a `settings` row read through `SettingsService`.
-- **Money as integers** — `app\Support\Money` formats `int $rupiah` values with `Rp` and `id_ID` conventions; arithmetic never touches floating point.
+`APP_KEY`, `config:cache`, `route:cache`, `view:cache`, queue worker (`queue:work`), scheduler,
+HTTPS, dan backup database — detail lengkap menyusul di **Phase 10**.
 
-## Testing
+## Roadmap
 
-```bash
-php artisan test          # all tests
-php artisan test --compact  # the usual local run
-```
+- [x] Phase 0 — Arsitektur & perencanaan
+- [x] Phase 1 — Fondasi (auth, RBAC, layout, komponen, settings, audit)
+- [x] Phase 2 — Properti & Kamar (peta kamar + situs publik)
+- [x] Phase 3 — Penghuni & Kontrak (undangan, move-in/out, deposit)
+- [x] Phase 4 — Penagihan (kalkulasi, penagihan berulang, denda, scheduler)
+- [x] Phase 5 — Pembayaran (bukti, verifikasi, refund, notifikasi)
+- [ ] Phase 6 — Maintenance (tiket, prioritas, penugasan, SLA)
+- [ ] Phase 7 — Pengumuman & Notifikasi (targeting, reminder otomatis)
+- [ ] Phase 8 — Pengeluaran & Laporan (dashboard keuangan/hunian, ekspor CSV/XLSX/PDF)
+- [ ] Phase 9 — Keamanan, Audit & Optimasi (IDOR review, N+1, caching, private file)
+- [ ] Phase 10 — Pengujian & Kesiapan Produksi (backup, monitoring, deployment)
 
-Initial coverage covers login/registration, profile, route access by role, permission scoping, settings casting, and audit append-only semantics. The duplicate-billing test and full financial tests land with Phases 4 and 5.
+## Kontribusi & Lisensi
 
-## Queue, Scheduler, Storage
+Pull request dipersilakan — jalankan `php artisan test` dan `vendor/bin/pint` sebelum submit.
 
-### Queue
-
-```env
-QUEUE_CONNECTION=database
-```
-
-```bash
-php artisan queue:listen --tries=1
-# or: composer -- dev (runs queue:listen alongside serve + pail + vite)
-```
-
-Heavy work (emails, PDF export, image processing) will run on the queue from Phase 4 onward.
-
-### Scheduler
-
-The monthly invoicing scheduler, overdue checks, SLA, and reminders (all idempotent + `Settings`-configurable) land from Phase 4; the `Schedule::` wiring will be documented here as each job ships.
-
-### Storage
-
-```bash
-php artisan storage:link   # links public/storage → storage/app/public
-```
-
-## Environment
-
-| Key | Default | Notes |
-|---|---|---|
-| `APP_TIMEZONE` | `Asia/Jakarta` | also in `config/app.php` & `config/kost.php` |
-| `APP_LOCALE` / `APP_FAKER_LOCALE` | `id` / `id_ID` | month names, faker locale |
-| `FILESYSTEM_DISK` | `local` | default `private`; `configs/filesystems.php` also exposes `private:+public` |
-| `KOST_DEV_PASSWORD` | `password` | overrides the password used by `DevUserSeeder` |
-
-## Development Notes
-
-- `bootstrap/app.php` installs `SetRequestId` on `web` (request tracing) and `role:` / `active` middleware aliases.
-- `AppServiceProvider` enables `Model::shouldBeStrict()` in local env, installs `Gate::before` for owners, `Password::defaults`, and rate-limited `login`.
-- Build output lives in `public/build` (generated by `vite build`). No step should commit it.
-- `php artisan pint` is the local formatter.
-
-## Deployment Notes
-
-Detailed notes ship with Phase 10. Checklist at that point will cover `APP_KEY` + cache config, queue worker, scheduler `crontab`, storage permissions, DB backups, logging, HTTPS, and a security review.
-
-## Contributing
-
-Fixes and additional phases are welcome. Enforce `php artisan pint` and `php artisan test` before pushing.
-KOST_DEV_PASSWORD is intentionally not committed.
+Lisensi **MIT**. UI dibangun dari nol dengan Tailwind CSS + Livewire.
