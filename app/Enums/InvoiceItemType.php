@@ -37,4 +37,20 @@ enum InvoiceItemType: string implements HasLabel
     {
         return 'neutral';
     }
+
+    /**
+     * Whether this item adds to the invoice subtotal (charge items).
+     */
+    public function isCharge(): bool
+    {
+        return in_array($this, [
+            self::Rent,
+            self::Electricity,
+            self::Water,
+            self::Internet,
+            self::Parking,
+            self::Other,
+            self::Deposit,
+        ], true);
+    }
 }

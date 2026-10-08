@@ -3,6 +3,7 @@
 use App\Livewire\Admin\Amenity\Index;
 use App\Models\Building;
 use App\Models\Floor;
+use App\Models\Invoice;
 use App\Models\Lease;
 use App\Models\Property;
 use App\Models\Room;
@@ -30,6 +31,7 @@ it('renders every admin listing page', function (string $route) {
     'admin.rooms.map',
     'admin.tenants',
     'admin.leases',
+    'admin.invoices',
 ]);
 
 it('renders every admin create form', function (string $route) {
@@ -42,6 +44,7 @@ it('renders every admin create form', function (string $route) {
     'admin.rooms.create',
     'admin.tenants.create',
     'admin.leases.create',
+    'admin.invoices.create',
 ]);
 
 it('renders the edit forms for existing records', function () {
@@ -72,6 +75,13 @@ it('renders the edit forms for existing records', function () {
     $this->get(route('admin.tenants.edit', $tenant))->assertOk();
     $this->get(route('admin.leases.show', $lease))->assertOk();
     $this->get(route('admin.leases.edit', $lease))->assertOk();
+
+    $invoice = Invoice::factory()->create([
+        'property_id' => $property->id,
+        'tenant_id' => $tenant->id,
+        'lease_id' => $lease->id,
+    ]);
+    $this->get(route('admin.invoices.show', $invoice->invoice_number))->assertOk();
 });
 
 it('creates an amenity through the inline form', function () {

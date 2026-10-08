@@ -70,15 +70,21 @@
     @endif
 
     <x-ui.card padding="p-0">
-        <div class="flex items-center gap-3 p-5">
-            <span class="inline-flex size-11 items-center justify-center rounded-lg bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400">
-                <x-ui.icon name="banknotes" class="size-6" />
-            </span>
-            <div>
-                <p class="text-sm font-semibold text-gray-900 dark:text-white">Tagihan Aktif</p>
-                <p class="text-sm text-gray-500 dark:text-gray-400">Belum ada tagihan saat ini.</p>
+        <a href="{{ route('tenant.invoices') }}" wire:navigate class="block">
+            <div class="flex items-center gap-3 p-5">
+                <span class="inline-flex size-11 items-center justify-center rounded-lg bg-warning-50 text-warning-600 dark:bg-warning-950 dark:text-warning-400">
+                    <x-ui.icon name="banknotes" class="size-6" />
+                </span>
+                <div class="min-w-0 flex-1">
+                    <p class="text-sm font-semibold text-gray-900 dark:text-white">Tagihan Aktif</p>
+                    @if ($currentInvoice)
+                        <p class="text-sm text-gray-500 dark:text-gray-400">{{ $currentInvoice->invoice_number }} · {{ \App\Support\Money::format($currentInvoice->amount_due) }} · Jt. tempo {{ $currentInvoice->due_date->translatedFormat('d M Y') }}</p>
+                    @else
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Belum ada tagihan saat ini.</p>
+                    @endif
+                </div>
             </div>
-        </div>
+        </a>
     </x-ui.card>
 
     <x-ui.card>

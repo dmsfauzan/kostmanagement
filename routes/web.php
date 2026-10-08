@@ -6,12 +6,16 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\RoomController as PublicRoomController;
 use App\Http\Controllers\Tenant\DashboardController as TenantDashboardController;
+use App\Http\Controllers\Tenant\InvoiceController as TenantInvoiceController;
 use App\Http\Controllers\Tenant\LeaseController as TenantLeaseController;
 use App\Livewire\Admin\Amenity\Index as AmenityIndex;
 use App\Livewire\Admin\Building\Form as BuildingForm;
 use App\Livewire\Admin\Building\Index as BuildingIndex;
 use App\Livewire\Admin\Floor\Form as FloorForm;
 use App\Livewire\Admin\Floor\Index as FloorIndex;
+use App\Livewire\Admin\Invoice\Form as InvoiceForm;
+use App\Livewire\Admin\Invoice\Index as InvoiceIndex;
+use App\Livewire\Admin\Invoice\Show as InvoiceShow;
 use App\Livewire\Admin\Lease\Form as LeaseForm;
 use App\Livewire\Admin\Lease\Index as LeaseIndex;
 use App\Livewire\Admin\Lease\MoveOut as LeaseMoveOut;
@@ -70,6 +74,8 @@ Route::middleware(['auth', 'active', 'role:tenant'])
     ->group(function () {
         Route::get('dashboard', TenantDashboardController::class)->name('dashboard');
         Route::get('lease', TenantLeaseController::class)->name('lease');
+        Route::get('invoices', [TenantInvoiceController::class, 'index'])->name('invoices');
+        Route::get('invoices/{invoice}', [TenantInvoiceController::class, 'show'])->name('invoices.show');
         Route::get('notifications', function () {
             return view('tenant.notifications');
         })->name('notifications');
@@ -131,6 +137,14 @@ Route::middleware(['auth', 'active', 'role:owner,admin,finance,technician'])
             ->middleware('can:room.create')->name('rooms.create');
         Route::get('rooms/{room}/edit', RoomForm::class)
             ->middleware('can:room.update')->name('rooms.edit');
+
+        // Invoices
+        Route::get('invoices', InvoiceIndex::class)
+            ->middleware('can:invoice.view')->name('invoices');
+        Route::get('invoices/create', InvoiceForm::class)
+            ->middleware('can:invoice.create')->name('invoices.create');
+        Route::get('invoices/{invoice:invoice_number}', InvoiceShow::class)
+            ->middleware('can:invoice.view')->name('invoices.show');
 
         // Tenants
         Route::get('tenants', TenantIndex::class)

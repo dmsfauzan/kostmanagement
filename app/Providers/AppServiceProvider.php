@@ -2,12 +2,22 @@
 
 namespace App\Providers;
 
+use App\Events\InvoiceIssued;
+use App\Listeners\SendInvoiceIssuedNotification;
 use App\Models\User;
 use App\Services\AuditService;
+use App\Services\BillingService;
+use App\Services\DepositService;
+use App\Services\LateFeeCalculator;
+use App\Services\LeaseService;
+use App\Services\OccupancyService;
+use App\Services\ProrationCalculator;
 use App\Services\SettingsService;
+use App\Services\TenantService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -22,6 +32,13 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(SettingsService::class);
         $this->app->singleton(AuditService::class);
+        $this->app->singleton(OccupancyService::class);
+        $this->app->singleton(TenantService::class);
+        $this->app->singleton(DepositService::class);
+        $this->app->singleton(LeaseService::class);
+        $this->app->singleton(ProrationCalculator::class);
+        $this->app->singleton(LateFeeCalculator::class);
+        $this->app->singleton(BillingService::class);
     }
 
     /**
@@ -29,6 +46,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Event::listen(InvoiceIssued::class, SendInvoiceIssuedNotification::class);
+
         // Strict mode surfaces N+1 queries and silent mass-assignment
         // mistakes during local development without affecting production.
         Model::shouldBeStrict($this->app->environment('local'));

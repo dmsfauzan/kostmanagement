@@ -26,8 +26,9 @@ Production-ready Kost Management System built on **Laravel 13** — Livewire, Bl
 | **0 — Architecture** | System, DB, ERD, module map, route map, permission matrix, service & scheduler plan | ✅ Delivered |
 | **1 — Foundation** | Auth, User, roles/permissions, admin/tenant/public layouts, 12 reusable UI components, settings, audit, dashboards, seeders, test suite | ✅ **Ready — you are here** |
 | **2 — Property & Room Management** | properties, buildings, floors, room types, rooms, amenities, room map, public rooms site | ✅ **Ready — you are here** |
-| **3 — Tenant & Lease** | tenants, documents, invitation/activation, leases, move-in/out, deposit settlement | ✅ **Ready — you are here** |
-| **4 — Billing** | invoices, invoice items, monthly generation + idempotency, proration, late fee | 🔜 Next |
+| **3 — Tenant & Lease** | tenants, documents, invitation/activation, leases, move-in/out, deposit settlement | ✅ **Ready** |
+| **4A — Billing Foundation** | invoices, invoice items, calculation services, manual/admin CRUD, tenant portal, issue notifications | ✅ **Ready — you are here** |
+| **4B — Recurring Billing** | monthly generation + idempotency, overdue marking, late fees, scheduler | 🔜 Next |
 | **5 — Payment** | payment methods, proof upload/verification, invoice recalculation | Planned |
 | **6 — Maintenance** | tickets, status workflow, assignment, SLA | Planned |
 | **7 — Announcement & Notification** | announcements, database+mail notifications, reminder scheduler | Planned |
@@ -126,6 +127,7 @@ address instead.
 
 - **PropertySeeder** — local/testing-only. Creates **Kost Mawar** with 2 buildings, 3 floors, 3 room types (Standard/Deluxe/Premium), 11 amenities, and 30 rooms across all statuses (available/occupied/maintenance/reserved).
 - **TenantSeeder** — local/testing-only. Links `tenant@kostmanagement.test` to a tenant profile and an **active lease** (room becomes occupied, deposit held), plus 2 extra sample tenants.
+- **BillingSeeder** — local/testing-only. Issues an invoice for the sample active lease so the tenant portal shows a real bill.
 
 ## Roles & Permissions
 
@@ -184,8 +186,10 @@ GET  /admin/rooms/map                visual room map
 GET  /admin/tenants | tenants/create | tenants/{tenant} | tenants/{tenant}/edit
 GET  /admin/leases | leases/create | leases/{lease} | leases/{lease}/edit | leases/{lease}/move-out
 GET  /admin/tenant-documents/{document}/download   (authorized private file)
+GET  /admin/invoices | invoices/create | invoices/{invoice_number}
 GET  /tenant/activate/{user}         signed activation URL (from invite email)
 GET  /tenant/lease                   tenant lease + history
+GET  /tenant/invoices | invoices/{invoice}   tenant invoices (own only)
 GET  /tenant/notifications           tenant notification inbox
 GET  /tenant/dashboard               tenant.dashboard  (auth + role:tenant)
 GET  /dashboard                      → redirects to the correct dashboard for the authenticated role
@@ -217,6 +221,17 @@ Data model: `tenants → leases → deposits`, plus `tenant_documents` (private 
 - **Move-out**: settlement form validates `deduction + refund ≤ amount`, writes `Deposit` (held/partially_returned/returned/forfeited), terminates the lease, and frees the room back to `available`.
 - **Portal tenant**: dashboard shows room, lease, days remaining and deposit; `/tenant/lease` lists active + history. Queries are always scoped to the authenticated tenant.
 - **Seeded demo**: tenant `tenant@kostmanagement.test` is active with an occupied room and held deposit.
+
+## Billing (Phase 4A)
+
+Data model: `invoices → invoice_items`. Invoice columns `subtotal/discount/late_fee/adjustment/total/amount_paid/amount_due` are **cached sums** recomputed by `BillingService::recalculate()` from line items (single source of truth).
+
+- **Calculation services** (pure, testable): `BillingService`, `LateFeeCalculator` (fixed-daily or percentage in **basis points**, `500 = 5.00%`), `ProrationCalculator` (configurable via settings), `InvoiceNumberGenerator` (`INV-{year}-{seq}`).
+- **Idempotency**: recurring invoices carry `billing_period` with a DB `unique(lease_id, billing_period)`; manual invoices use `billing_period = NULL` (multiple allowed).
+- **Lifecycle**: draft → issued (dispatches `InvoiceIssued` → `InvoiceIssuedNotification` mail + database) → void (row kept, reason required). Paid/partially-paid arrives with Phase 5.
+- **Admin UI**: invoice list (filters + billed/outstanding/overdue summary), manual create with dynamic items, detail with item add/remove, issue, void.
+- **Tenant portal**: `/tenant/invoices` + detail (own only), dashboard "Tagihan Aktif" widget, bottom-nav **Tagihan**.
+- **Seeded demo**: an issued invoice for the sample active lease.
 
 ## Key Decisions
 

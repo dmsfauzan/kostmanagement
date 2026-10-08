@@ -55,6 +55,11 @@ class Tenant extends Model
         return $this->hasMany(Lease::class);
     }
 
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
     public function activeLease(): HasOne
     {
         return $this->hasOne(Lease::class)

@@ -20,9 +20,14 @@ class DashboardController extends Controller
             ->latest()
             ->first();
 
+        $currentInvoice = $tenant
+            ? $tenant->invoices()->unpaid()->orderBy('due_date')->with('items')->first()
+            : null;
+
         return view('tenant.dashboard', [
             'tenant' => $tenant,
             'lease' => $lease,
+            'currentInvoice' => $currentInvoice,
         ]);
     }
 }
