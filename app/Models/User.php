@@ -59,6 +59,11 @@ class User extends Authenticatable
         return $this->hasRole('tenant');
     }
 
+    public function isStaff(): bool
+    {
+        return $this->hasAnyRole(['owner', 'admin', 'finance', 'technician']);
+    }
+
     public function initials(): string
     {
         $parts = preg_split('/\s+/', trim((string) $this->name)) ?: [];

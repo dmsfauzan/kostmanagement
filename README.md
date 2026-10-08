@@ -259,10 +259,12 @@ Rute utama:
 
 ## Keamanan & Validitas
 
-- Session auth + CSRF, password di-hash, **rate-limit login** (5/menit per email+IP).
-- **RBAC granular** (66 permission) di tiga lapis: middleware `role:`/`can:`, `Gate`, dan cek ulang di dalam aksi.
+- Session auth + CSRF, password di-hash, **rate-limit login** (5/menit per email+IP) + **throttle** unggah (`30/menit`), ekspor (`10/menit`), pencarian (`60/menit`).
+- **RBAC granular** (66 permission) di tiga lapis: middleware `role:`/`can:`, `Gate`, dan cek ulang di dalam aksi — plus **model Policies** (`Tenant/Lease/Invoice/Payment/Maintenance`) untuk aturan record-level/IDOR.
+- **Security headers** di setiap respons (HSTS bila HTTPS produksi) + `URL::forceScheme('https')` di produksi.
+- **Halaman error ramah** (403/404/419/429/500) tanpa membocorkan detail teknis; `X-Request-ID` untuk tracing.
 - **Akun nonaktif otomatis ditolak** (`EnsureUserIsActive`).
-- **Bukti & dokumen sensitif** disimpan di **private disk** dan hanya diunduh lewat endpoint ber-authorize (admin `payment.view` / tenant pemilik).
+- **Bukti & dokumen sensitif** disimpan di **private disk** dan hanya diunduh lewat endpoint ber-authorize berbasis **role staf / kepemilikan tenant** (tanpa mengandalkan permission tenant).
 - **Audit trail append-only** untuk setiap perubahan penting (lease, invoice, payment, deposit).
 - Validasi di frontend *dan* backend; error teknis tidak diekspos ke pengguna (`X-Request-ID` untuk tracing).
 - Aturan integritas: kamar tidak boleh punya dua kontrak aktif yang tumpang tindih, tidak ada tagihan ganda per periode, `amount_paid` hanya dari pembayaran terverifikasi, tidak ada hard-delete data keuangan.
@@ -275,9 +277,10 @@ php artisan test tests/Feature/Payment            # fokus alur pembayaran
 vendor/bin/pint --test                            # gaya kode
 ```
 
-**156 test hijau** meliputi: kalkulasi tagihan (diskon/denda/prorata), **idempotensi penagihan
+**212 test hijau** meliputi: kalkulasi tagihan (diskon/denda/prorata), **idempotensi penagihan
 bulanan** (2× jalan ⇒ 1 invoice), verifikasi pembayaran (lunas/sebagian/lebih bayar), refund,
-isolasi data antar-tenant, otorisasi per peran, dan smoke-render seluruh halaman admin/tenant/publik.
+isolasi data antar-tenant, otorisasi per peran, **keamanan file privat (IDOR)**, dan smoke-render
+seluruh halaman admin/tenant/publik.
 
 ## Build & Deploy
 
@@ -317,7 +320,7 @@ HTTPS, dan backup database — detail lengkap menyusul di **Phase 10**.
 - [x] Phase 7 — Pengumuman & Notifikasi (pengumuman bertarget, reminder otomatis, inbox)
 - [x] Phase 8 — Expense & Reporting (pengeluaran, dashboard finansial, 9 laporan + ekspor CSV/XLSX/PDF, global search)
 - [ ] Phase 8 — Pengeluaran & Laporan (dashboard keuangan/hunian, ekspor CSV/XLSX/PDF)
-- [ ] Phase 9 — Keamanan, Audit & Optimasi (IDOR review, N+1, caching, private file)
+- [~] Phase 9 — Keamanan, Audit & Optimasi (9A headers/policies/error UX ✅ · 9B audit/performance)
 - [ ] Phase 10 — Pengujian & Kesiapan Produksi (backup, monitoring, deployment)
 
 ## Kontribusi & Lisensi

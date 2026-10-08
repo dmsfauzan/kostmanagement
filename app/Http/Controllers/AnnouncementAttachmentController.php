@@ -13,7 +13,7 @@ class AnnouncementAttachmentController extends Controller
         $user = request()->user();
 
         $isRecipient = $announcement->recipients()->where('user_id', $user->id)->exists();
-        $staff = $user->can('announcement.view');
+        $staff = $user->isStaff();
 
         abort_unless($isRecipient || $staff, 404);
         abort_unless($announcement->attachment_path, 404);

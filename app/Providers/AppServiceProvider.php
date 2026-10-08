@@ -46,6 +46,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -70,9 +71,6 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(AnnouncementService::class);
         $this->app->singleton(ReminderService::class);
         $this->app->singleton(FinancialService::class);
-        $this->app->singleton(ExportService::class);
-        $this->app->singleton(ReportService::class);
-        $this->app->singleton(GlobalSearchService::class);
         $this->app->singleton(ExportService::class);
         $this->app->singleton(ReportService::class);
         $this->app->singleton(GlobalSearchService::class);
@@ -103,6 +101,11 @@ class AppServiceProvider extends ServiceProvider
             return $user->hasRole('owner') ? true : null;
         });
 
+        // Assume HTTPS behind the production proxy/load balancer.
+        if ($this->app->isProduction()) {
+            URL::forceScheme('https');
+        }
+
         Password::defaults(function (): Password {
             $rule = Password::min(8);
 
@@ -115,6 +118,18 @@ class AppServiceProvider extends ServiceProvider
             $key = (string) $request->input('email').'|'.$request->ip();
 
             return Limit::perMinute(5)->by($key);
+        });
+
+        RateLimiter::for('uploads', function (Request $request): Limit {
+            return Limit::perMinute(30)->by($request->user()?->id ?: $request->ip());
+        });
+
+        RateLimiter::for('exports', function (Request $request): Limit {
+            return Limit::perMinute(10)->by($request->user()?->id ?: $request->ip());
+        });
+
+        RateLimiter::for('search', function (Request $request): Limit {
+            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
     }
 }

@@ -13,7 +13,7 @@ class PaymentProofController extends Controller
         $user = request()->user();
 
         $owns = $payment->tenant_id === $user->tenant?->id;
-        $canViewAny = $user->can('payment.view');
+        $canViewAny = $user->isStaff();
 
         abort_unless($owns || $canViewAny, 404);
         abort_unless($payment->proof_path, 404);

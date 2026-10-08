@@ -14,7 +14,7 @@ class MaintenanceAttachmentController extends Controller
         $ticket = $attachment->ticket;
 
         $owns = $ticket->tenant_id !== null && $ticket->tenant_id === $user->tenant?->id;
-        $staff = $user->can('maintenance.view');
+        $staff = $user->isStaff();
 
         abort_unless($owns || $staff, 404);
 

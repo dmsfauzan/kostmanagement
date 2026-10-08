@@ -104,17 +104,17 @@ Route::middleware(['auth', 'active', 'role:tenant'])
         Route::post('payments/{payment}/cancel', [TenantPaymentController::class, 'cancel'])
             ->name('payments.cancel');
         Route::get('payments/{payment}/proof', PaymentProofController::class)
-            ->middleware('can:payment.view')->name('payments.proof');
+            ->middleware(['throttle:uploads', 'can:payment.view'])->name('payments.proof');
         Route::get('maintenance', TenantMaintenanceIndex::class)->name('maintenance');
         Route::get('maintenance/create', TenantMaintenanceCreate::class)->name('maintenance.create');
         Route::get('maintenance/attachments/{attachment}', MaintenanceAttachmentController::class)
-            ->name('maintenance.attachment');
+            ->middleware('throttle:uploads')->name('maintenance.attachment');
         Route::get('maintenance/{ticket}', TenantMaintenanceShow::class)->name('maintenance.show');
         Route::get('notifications', TenantNotificationsIndex::class)->name('notifications');
         Route::get('announcements', [TenantAnnouncementController::class, 'index'])->name('announcements');
         Route::get('announcements/{announcement}', [TenantAnnouncementController::class, 'show'])->name('announcements.show');
         Route::get('announcements/{announcement}/attachment', AnnouncementAttachmentController::class)
-            ->name('announcements.attachment');
+            ->middleware('throttle:uploads')->name('announcements.attachment');
     });
 
 /*
@@ -187,7 +187,7 @@ Route::middleware(['auth', 'active', 'role:owner,admin,finance,technician'])
         Route::get('payments', PaymentIndex::class)
             ->middleware('can:payment.view')->name('payments');
         Route::get('payments/{payment}/proof', PaymentProofController::class)
-            ->middleware('can:payment.view')->name('payments.proof');
+            ->middleware(['throttle:uploads', 'can:payment.view'])->name('payments.proof');
         Route::get('payments/{payment}', PaymentShow::class)
             ->middleware('can:payment.view')->name('payments.show');
         Route::get('payment-methods', PaymentMethodIndex::class)
@@ -199,7 +199,7 @@ Route::middleware(['auth', 'active', 'role:owner,admin,finance,technician'])
         Route::get('maintenance/{ticket}', AdminMaintenanceShow::class)
             ->middleware('can:maintenance.view')->name('maintenance.show');
         Route::get('maintenance/attachments/{attachment}', MaintenanceAttachmentController::class)
-            ->name('maintenance.attachment');
+            ->middleware('throttle:uploads')->name('maintenance.attachment');
 
         // Announcements
         Route::get('announcements', AnnouncementIndex::class)
@@ -209,7 +209,7 @@ Route::middleware(['auth', 'active', 'role:owner,admin,finance,technician'])
         Route::get('announcements/{announcement}/edit', AnnouncementForm::class)
             ->middleware('can:announcement.update')->name('announcements.edit');
         Route::get('announcements/{announcement}/attachment', AnnouncementAttachmentController::class)
-            ->middleware('can:announcement.view')->name('announcements.attachment');
+            ->middleware(['throttle:uploads', 'can:announcement.view'])->name('announcements.attachment');
 
         // Expenses
         Route::get('expenses', ExpenseIndex::class)
@@ -217,15 +217,15 @@ Route::middleware(['auth', 'active', 'role:owner,admin,finance,technician'])
         Route::get('expenses/create', ExpenseForm::class)
             ->middleware('can:expense.create')->name('expenses.create');
         Route::get('expenses/receipt/{expense}', [ExpenseReceiptController::class, 'download'])
-            ->middleware('can:expense.view')->name('expenses.receipt');
+            ->middleware(['throttle:uploads', 'can:expense.view'])->name('expenses.receipt');
         Route::get('expenses/{expense}/edit', ExpenseForm::class)
             ->middleware('can:expense.update')->name('expenses.edit');
 
         // Reports
         Route::get('reports', ReportIndex::class)
-            ->middleware('can:report.view')->name('reports');
+            ->middleware(['throttle:search', 'can:report.view'])->name('reports');
         Route::get('reports/export', ReportExportController::class)
-            ->middleware('can:report.export')->name('reports.export');
+            ->middleware(['throttle:exports', 'can:report.export'])->name('reports.export');
 
         // Tenants
         Route::get('tenants', TenantIndex::class)
@@ -237,7 +237,7 @@ Route::middleware(['auth', 'active', 'role:owner,admin,finance,technician'])
         Route::get('tenants/{tenant}/edit', TenantForm::class)
             ->middleware('can:tenant.update')->name('tenants.edit');
         Route::get('tenant-documents/{document}/download', [TenantDocumentController::class, 'download'])
-            ->middleware('can:tenant_document.view')->name('tenant-documents.download');
+            ->middleware(['throttle:uploads', 'can:tenant_document.view'])->name('tenant-documents.download');
 
         // Leases
         Route::get('leases', LeaseIndex::class)
