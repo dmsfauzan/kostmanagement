@@ -6,8 +6,12 @@
         </div>
 
         @if (\Illuminate\Support\Facades\Route::has('tenant.notifications'))
+            @php $unreadCount = auth()->user()->unreadNotifications()->count(); @endphp
             <a href="{{ route('tenant.notifications') }}" class="relative rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800" aria-label="Notifikasi">
                 <x-ui.icon name="bell" class="size-6" />
+                @if ($unreadCount > 0)
+                    <span class="absolute -right-0.5 -top-0.5 inline-flex size-4 items-center justify-center rounded-full bg-danger-500 text-[10px] font-bold text-white">{{ $unreadCount > 99 ? '99+' : $unreadCount }}</span>
+                @endif
             </a>
         @endif
 

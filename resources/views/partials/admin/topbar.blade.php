@@ -18,6 +18,16 @@
     </div>
 
     <div class="flex items-center gap-2">
+        @if (\Illuminate\Support\Facades\Route::has('admin.notifications'))
+            @php $adminUnread = auth()->user()->unreadNotifications()->count(); @endphp
+            <a href="{{ route('admin.notifications') }}" wire:navigate class="relative rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800" aria-label="Notifikasi">
+                <x-ui.icon name="bell" class="size-5" />
+                @if ($adminUnread > 0)
+                    <span class="absolute -right-0.5 -top-0.5 inline-flex size-4 items-center justify-center rounded-full bg-danger-500 text-[10px] font-bold text-white">{{ $adminUnread > 99 ? '99+' : $adminUnread }}</span>
+                @endif
+            </a>
+        @endif
+
         <div class="hidden items-center gap-2 sm:flex">
             <x-ui.avatar :name="auth()->user()->name" size="sm" />
             <div class="leading-tight">

@@ -109,6 +109,16 @@ flowchart LR
 | Penerima | Dimaterialisasi saat publish → notifikasi (mail + database) |
 | Portal Tenant | Daftar relevan + detail (mark as read), kartu pengumuman di dashboard |
 
+### Phase 7B — Reminder & Notifikasi
+
+| Modul | Keterangan |
+|---|---|
+| Pengingat Tagihan | `billing:send-due-reminders` (H-7/3/1/0) + `billing:send-overdue-reminders` (H+1/3/7) |
+| Pengingat Kontrak | `leases:send-expiry-reminders` (H-90/30/14/7) → tenant + admin |
+| Idempotensi | `reminder_logs` (subject + key unik) mencegah pengiriman berulang per offset |
+| Notifikasi | Inbox tenant + admin dengan lonceng unread + "Tandai semua dibaca" |
+| Pengumuman Terjadwal | `announcements:publish-due` menerbitkan yang `publish_at`-nya telah tiba |
+
 ### Fitur publik
 
 - Katalog kamar tersedia dengan filter tipe + pencarian nomor, halaman detail kamar (foto, fasilitas, harga, aturan).
@@ -264,7 +274,8 @@ php artisan storage:link # symlink file publik (foto kamar, logo)
 
 ```bash
 php artisan schedule:list
-# generate tagihan tgl 1; mark-overdue & apply-late-fees harian; cek SLA maintenance per jam
+# generate tagihan tgl 1; mark-overdue & apply-late-fees harian;
+# cek SLA maintenance per jam; reminder harian; publish pengumuman tiap 5 menit
 ```
 
 Di Windows/Laragon, jalankan scheduler tiap menit:
@@ -287,7 +298,7 @@ HTTPS, dan backup database — detail lengkap menyusul di **Phase 10**.
 - [x] Phase 4 — Penagihan (kalkulasi, penagihan berulang, denda, scheduler)
 - [x] Phase 5 — Pembayaran (bukti, verifikasi, refund, notifikasi)
 - [x] Phase 6 — Maintenance (tiket, prioritas, penugasan, SLA)
-- [~] Phase 7 — Pengumuman & Notifikasi (7A pengumuman ✅ · 7B reminder otomatis)
+- [x] Phase 7 — Pengumuman & Notifikasi (pengumuman bertarget, reminder otomatis, inbox)
 - [ ] Phase 8 — Pengeluaran & Laporan (dashboard keuangan/hunian, ekspor CSV/XLSX/PDF)
 - [ ] Phase 9 — Keamanan, Audit & Optimasi (IDOR review, N+1, caching, private file)
 - [ ] Phase 10 — Pengujian & Kesiapan Produksi (backup, monitoring, deployment)

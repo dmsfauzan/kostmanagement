@@ -33,6 +33,7 @@ use App\Services\MaintenanceService;
 use App\Services\OccupancyService;
 use App\Services\PaymentService;
 use App\Services\ProrationCalculator;
+use App\Services\ReminderService;
 use App\Services\SettingsService;
 use App\Services\TenantService;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -63,6 +64,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(PaymentService::class);
         $this->app->singleton(MaintenanceService::class);
         $this->app->singleton(AnnouncementService::class);
+        $this->app->singleton(ReminderService::class);
     }
 
     /**

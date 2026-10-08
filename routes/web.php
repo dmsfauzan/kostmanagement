@@ -29,6 +29,7 @@ use App\Livewire\Admin\Lease\MoveOut as LeaseMoveOut;
 use App\Livewire\Admin\Lease\Show as LeaseShow;
 use App\Livewire\Admin\Maintenance\Index as AdminMaintenanceIndex;
 use App\Livewire\Admin\Maintenance\Show as AdminMaintenanceShow;
+use App\Livewire\Admin\Notifications\Index as AdminNotificationsIndex;
 use App\Livewire\Admin\Payment\Index as PaymentIndex;
 use App\Livewire\Admin\Payment\Show as PaymentShow;
 use App\Livewire\Admin\PaymentMethod\Index as PaymentMethodIndex;
@@ -46,6 +47,7 @@ use App\Livewire\Tenant\Auth\ActivateAccount;
 use App\Livewire\Tenant\Maintenance\Create as TenantMaintenanceCreate;
 use App\Livewire\Tenant\Maintenance\Index as TenantMaintenanceIndex;
 use App\Livewire\Tenant\Maintenance\Show as TenantMaintenanceShow;
+use App\Livewire\Tenant\Notifications\Index as TenantNotificationsIndex;
 use App\Livewire\Tenant\Payment\Submit as TenantPaymentSubmit;
 /*
 |--------------------------------------------------------------------------
@@ -103,13 +105,11 @@ Route::middleware(['auth', 'active', 'role:tenant'])
         Route::get('maintenance/attachments/{attachment}', MaintenanceAttachmentController::class)
             ->name('maintenance.attachment');
         Route::get('maintenance/{ticket}', TenantMaintenanceShow::class)->name('maintenance.show');
+        Route::get('notifications', TenantNotificationsIndex::class)->name('notifications');
         Route::get('announcements', [TenantAnnouncementController::class, 'index'])->name('announcements');
         Route::get('announcements/{announcement}', [TenantAnnouncementController::class, 'show'])->name('announcements.show');
         Route::get('announcements/{announcement}/attachment', AnnouncementAttachmentController::class)
             ->name('announcements.attachment');
-        Route::get('notifications', function () {
-            return view('tenant.notifications');
-        })->name('notifications');
     });
 
 /*
@@ -122,6 +122,7 @@ Route::middleware(['auth', 'active', 'role:owner,admin,finance,technician'])
     ->name('admin.')
     ->group(function () {
         Route::get('dashboard', AdminDashboardController::class)->name('dashboard');
+        Route::get('notifications', AdminNotificationsIndex::class)->name('notifications');
 
         // Properties
         Route::get('properties', PropertyIndex::class)
